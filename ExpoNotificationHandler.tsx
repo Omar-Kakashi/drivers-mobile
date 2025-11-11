@@ -38,9 +38,14 @@ const ExpoNotificationHandler = () => {
       if (token) {
         setExpoPushToken(token);
         console.log('📱 Expo Push Token:', token);
+        console.log('✅ Push notifications ready!');
         
-        // TODO: Send this token to your backend
+        // Send this token to your backend
         sendTokenToBackend(token);
+      } else {
+        console.log('ℹ️ Push notifications not available in this environment');
+        console.log('ℹ️ For full push notification support, build a custom development client:');
+        console.log('   npx eas-cli build --profile development --platform android');
       }
     });
 
@@ -76,10 +81,10 @@ const ExpoNotificationHandler = () => {
     // Cleanup listeners on unmount
     return () => {
       if (notificationListener.current) {
-        Notifications.removeNotificationSubscription(notificationListener.current);
+        notificationListener.current.remove();
       }
       if (responseListener.current) {
-        Notifications.removeNotificationSubscription(responseListener.current);
+        responseListener.current.remove();
       }
     };
   }, []);
@@ -161,19 +166,37 @@ async function registerForPushNotificationsAsync() {
 
   // Get Expo Push Token
   try {
-    token = (
-      await Notifications.getExpoPushTokenAsync({
-        projectId: Constants.expoConfig?.extra?.eas?.projectId || 'your-project-id',
-      })
-    ).data;
+    // For Expo Go, we can get token without projectId
+    const projectId = Constants.expoConfig?.extra?.eas?.projectId;
+    
+    if (projectId) {
+      // Custom build with EAS projectId
+      token = (
+        await Notifications.getExpoPushTokenAsync({ projectId })
+      ).data;
+    } else {
+      // Expo Go - no projectId needed
+      token = (await Notifications.getExpoPushTokenAsync()).data;
+    }
+    
+    console.log('✅ Successfully generated Expo Push Token');
   } catch (error) {
     console.error('❌ Error getting Expo Push Token:', error);
     
-    // Fallback: try without projectId for Expo Go
+    // Last resort: try with manifest ID
     try {
-      token = (await Notifications.getExpoPushTokenAsync()).data;
+      const manifestId = (Constants.manifest as any)?.id || (Constants.manifest2 as any)?.extra?.eas?.projectId;
+      if (manifestId) {
+        token = (
+          await Notifications.getExpoPushTokenAsync({
+            projectId: manifestId,
+          })
+        ).data;
+      }
     } catch (fallbackError) {
-      console.error('❌ Fallback token generation failed:', fallbackError);
+      console.warn('⚠️ Could not generate push token. This is normal in Expo Go without a project ID.');
+      console.warn('Push notifications will work once you build a custom development client.');
+      return undefined;
     }
   }
 

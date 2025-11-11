@@ -7,6 +7,12 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
+    "owner": "ostol",
+    "extra": {
+      "eas": {
+        "projectId": "ostol-mobile-app"
+      }
+    },
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
