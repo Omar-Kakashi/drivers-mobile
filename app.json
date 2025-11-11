@@ -26,11 +26,14 @@
         "NOTIFICATIONS",
         "RECEIVE_BOOT_COMPLETED",
         "VIBRATE"
-      ]
+      ],
+      "useNextNotificationsApi": true
     },
     "notification": {
       "icon": "./assets/icon.png",
-      "color": "#001f3f"
+      "color": "#001f3f",
+      "androidMode": "default",
+      "iosDisplayInForeground": true
     },
     "web": {
       "favicon": "./assets/favicon.png"
