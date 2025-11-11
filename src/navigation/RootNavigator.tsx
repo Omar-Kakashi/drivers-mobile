@@ -8,7 +8,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { ActivityIndicator, View } from 'react-native';
 import { useAuthStore } from '../stores/authStore';
 import { theme } from '../theme';
-import NotificationHandler from '../../NotificationHandler';
+import ExpoNotificationHandler from '../../ExpoNotificationHandler';
 
 // Auth Screens
 import LoginTypeScreen from '../screens/auth/LoginTypeScreen';
@@ -43,7 +43,7 @@ export default function RootNavigator() {
 
   return (
     <NavigationContainer>
-      <NotificationHandler />
+      <ExpoNotificationHandler />
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {!isAuthenticated ? (
           // Auth Stack
