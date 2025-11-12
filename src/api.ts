@@ -159,6 +159,9 @@ class BackendAPI {
    * Returns is_first_login: true if password never changed
    */
   async driverLogin(identifier: string, password: string): Promise<AuthResponse> {
+    // Ensure backend URL is initialized before login
+    await this.initializeBackendUrl();
+    
     const { data } = await this.client.post('/auth/driver-login', { identifier, password });
     return data;
   }
@@ -168,8 +171,27 @@ class BackendAPI {
    * is_first_login should always be false (no password change needed)
    */
   async adminLogin(email: string, password: string): Promise<AuthResponse> {
-    const { data } = await this.client.post('/auth/admin-login', { email, password });
-    return data;
+    // Ensure backend URL is initialized before login
+    await this.initializeBackendUrl();
+    
+    console.log('🔐 Admin Login Request:', { 
+      email, 
+      baseURL: this.client.defaults.baseURL,
+      url: '/auth/admin-login'
+    });
+    try {
+      const { data } = await this.client.post('/auth/admin-login', { email, password });
+      console.log('✅ Admin Login Success');
+      return data;
+    } catch (error: any) {
+      console.error('❌ Admin Login Failed:', {
+        status: error.response?.status,
+        message: error.message,
+        url: error.config?.url,
+        baseURL: error.config?.baseURL
+      });
+      throw error;
+    }
   }
 
   /**
@@ -244,6 +266,9 @@ class BackendAPI {
   }
 
   async getNotifications(userId: string, userType: 'driver' | 'admin'): Promise<Notification[]> {
+    // Ensure backend URL is initialized
+    await this.initializeBackendUrl();
+    
     const { data } = await this.client.get('/notifications/', { 
       params: { 
         user_id: userId, 
@@ -254,6 +279,9 @@ class BackendAPI {
   }
 
   async markNotificationRead(notificationId: string, userId: string): Promise<void> {
+    // Ensure backend URL is initialized
+    await this.initializeBackendUrl();
+    
     await this.client.put(`/notifications/${notificationId}/read`, null, {
       params: { user_id: userId }
     });

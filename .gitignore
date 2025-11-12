@@ -50,3 +50,5 @@ web-build/
 *.swp
 *.swo
 *~
+
+firebase-service-account.json

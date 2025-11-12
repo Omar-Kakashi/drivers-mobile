@@ -16,6 +16,7 @@ import * as Device from 'expo-device';
 import Constants from 'expo-constants';
 import { useNavigation } from '@react-navigation/native';
 import Toast from 'react-native-toast-message';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Configure notification behavior (how they appear when app is open)
 Notifications.setNotificationHandler({
@@ -164,40 +165,19 @@ async function registerForPushNotificationsAsync() {
     return undefined;
   }
 
-  // Get Expo Push Token
+  // Get FCM Token (actual Firebase token, not Expo token)
   try {
-    // For Expo Go, we can get token without projectId
-    const projectId = Constants.expoConfig?.extra?.eas?.projectId;
+    // Get native device push token (FCM for Android, APNs for iOS)
+    const deviceToken = await Notifications.getDevicePushTokenAsync();
+    token = deviceToken.data;
     
-    if (projectId) {
-      // Custom build with EAS projectId
-      token = (
-        await Notifications.getExpoPushTokenAsync({ projectId })
-      ).data;
-    } else {
-      // Expo Go - no projectId needed
-      token = (await Notifications.getExpoPushTokenAsync()).data;
-    }
-    
-    console.log('✅ Successfully generated Expo Push Token');
+    console.log('✅ Successfully generated FCM Push Token');
+    console.log('📱 Token type:', deviceToken.type); // 'fcm' for Android, 'apns' for iOS
   } catch (error) {
-    console.error('❌ Error getting Expo Push Token:', error);
-    
-    // Last resort: try with manifest ID
-    try {
-      const manifestId = (Constants.manifest as any)?.id || (Constants.manifest2 as any)?.extra?.eas?.projectId;
-      if (manifestId) {
-        token = (
-          await Notifications.getExpoPushTokenAsync({
-            projectId: manifestId,
-          })
-        ).data;
-      }
-    } catch (fallbackError) {
-      console.warn('⚠️ Could not generate push token. This is normal in Expo Go without a project ID.');
-      console.warn('Push notifications will work once you build a custom development client.');
-      return undefined;
-    }
+    console.error('❌ Error getting FCM Token:', error);
+    console.warn('⚠️ FCM tokens require google-services.json and custom build');
+    console.warn('⚠️ Make sure you ran: eas build --profile development --platform android');
+    return undefined;
   }
 
   // Android-specific: Create notification channel
@@ -217,19 +197,76 @@ async function registerForPushNotificationsAsync() {
 }
 
 /**
+ * Detect available backend (tries local networks first, then production)
+ */
+async function detectBackendUrl(): Promise<string> {
+  const POSSIBLE_BACKENDS = [
+    'http://192.168.0.111:5000',     // Home/Office Network 1
+    'http://192.168.1.111:5000',     // Home/Office Network 2
+    'http://10.0.0.111:5000',        // Alternative local network
+    'https://ostol.stsc.ae/api',     // Production backend (fallback)
+  ];
+
+  console.log('🔍 Detecting backend network...');
+
+  for (const url of POSSIBLE_BACKENDS) {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 2000); // 2 second timeout
+
+      const response = await fetch(`${url}/`, {
+        method: 'GET',
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (response.ok || response.status === 404) {
+        // 404 is OK - means backend is reachable (just no root route)
+        console.log(`✅ Backend found at: ${url}`);
+        return url;
+      }
+    } catch (error) {
+      // Try next URL
+      console.log(`⏭️ ${url} not reachable, trying next...`);
+    }
+  }
+
+  // Fallback to production
+  console.log('⚠️ No local backend found, using production');
+  return 'https://ostol.stsc.ae/api';
+}
+
+/**
  * Send Expo Push Token to your backend
- * TODO: Replace with your actual backend endpoint
  */
 async function sendTokenToBackend(expoPushToken: string) {
   try {
-    const BACKEND_URL = 'https://ostol.stsc.ae/api'; // Your production backend
-    // const BACKEND_URL = 'http://localhost:5000'; // Development backend
+    const BACKEND_URL = await detectBackendUrl();
+    
+    // Get user info from AsyncStorage
+    const userJson = await AsyncStorage.getItem('user');
+    const user = userJson ? JSON.parse(userJson) : null;
+    
+    console.log('👤 User from storage:', user ? `ID: ${user.id}` : 'Not logged in');
+    
+    // If user not logged in, skip registration
+    if (!user?.id) {
+      console.log('⏭️ Skipping push token registration - user not logged in');
+      console.log('💡 Token will be registered automatically after login');
+      return;
+    }
+    
+    // Prepare headers with user info
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'X-User-ID': user.id,
+      'X-User-Type': 'driver', // Mobile app = driver
+    };
 
     const response = await fetch(`${BACKEND_URL}/fcm-tokens/register`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify({
         token: expoPushToken,
         device_type: Platform.OS,
@@ -240,7 +277,9 @@ async function sendTokenToBackend(expoPushToken: string) {
     if (response.ok) {
       console.log('✅ Push token registered with backend');
     } else {
+      const errorText = await response.text();
       console.warn('⚠️ Failed to register push token:', response.status);
+      console.warn('📄 Error details:', errorText);
     }
   } catch (error) {
     console.error('❌ Error sending token to backend:', error);

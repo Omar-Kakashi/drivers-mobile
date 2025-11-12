@@ -3,7 +3,8 @@
  */
 
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, KeyboardAvoidingView, ScrollView, Platform } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../../theme';
 import { useAuthStore } from '../../stores/authStore';
 import { toastValidationError, toastError } from '../../utils/toastHelpers';
@@ -12,6 +13,7 @@ export default function DriverLoginScreen({ navigation }: any) {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const login = useAuthStore((state) => state.login);
 
   const handleLogin = async () => {
@@ -32,11 +34,19 @@ export default function DriverLoginScreen({ navigation }: any) {
   };
 
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Driver Login</Text>
-        <Text style={styles.subtitle}>Enter your credentials</Text>
-      </View>
+    <KeyboardAvoidingView 
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={0}
+    >
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View style={styles.header}>
+          <Text style={styles.title}>Driver Login</Text>
+          <Text style={styles.subtitle}>Enter your credentials</Text>
+        </View>
 
       <View style={styles.form}>
         <View style={styles.inputGroup}>
@@ -44,6 +54,7 @@ export default function DriverLoginScreen({ navigation }: any) {
           <TextInput
             style={styles.input}
             placeholder="Enter driver ID or phone"
+            placeholderTextColor={theme.colors.text.secondary}
             value={identifier}
             onChangeText={setIdentifier}
             autoCapitalize="none"
@@ -53,13 +64,26 @@ export default function DriverLoginScreen({ navigation }: any) {
 
         <View style={styles.inputGroup}>
           <Text style={styles.label}>Password</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter password"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-          />
+          <View style={styles.passwordContainer}>
+            <TextInput
+              style={styles.passwordInput}
+              placeholder="Enter password"
+              placeholderTextColor={theme.colors.text.secondary}
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!showPassword}
+            />
+            <TouchableOpacity 
+              style={styles.eyeButton}
+              onPress={() => setShowPassword(!showPassword)}
+            >
+              <Ionicons 
+                name={showPassword ? 'eye-off' : 'eye'} 
+                size={24} 
+                color={theme.colors.text.secondary} 
+              />
+            </TouchableOpacity>
+          </View>
         </View>
 
         <TouchableOpacity
@@ -79,11 +103,12 @@ export default function DriverLoginScreen({ navigation }: any) {
         </TouchableOpacity>
       </View>
 
-      <Text style={styles.hint}>
-        Default password: 123456789{'\n'}
-        You will be asked to change it on first login
-      </Text>
-    </View>
+        <Text style={styles.hint}>
+          Default password: 123456789{'\n'}
+          You will be asked to change it on first login
+        </Text>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -91,6 +116,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
+  },
+  scrollContent: {
+    flexGrow: 1,
     padding: theme.spacing.xl,
     justifyContent: 'center',
   },
@@ -125,6 +153,24 @@ const styles = StyleSheet.create({
     borderRadius: theme.borderRadius.md,
     borderWidth: 1,
     borderColor: theme.colors.border,
+    color: theme.colors.text.primary,
+  },
+  passwordContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.surface,
+    borderRadius: theme.borderRadius.md,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  passwordInput: {
+    ...theme.typography.body1,
+    flex: 1,
+    padding: theme.spacing.md,
+    color: theme.colors.text.primary,
+  },
+  eyeButton: {
+    padding: theme.spacing.md,
   },
   button: {
     backgroundColor: theme.colors.primary,

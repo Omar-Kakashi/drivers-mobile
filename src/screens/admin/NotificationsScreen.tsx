@@ -21,9 +21,11 @@ export default function NotificationsScreen() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
   const loadNotifications = async () => {
+    if (!user?.id) return;
+    
     try {
-      const response = await api.get(`/notifications/${user?.id}?user_type=admin`);
-      setNotifications(response.data);
+      const data = await api.getNotifications(user.id, 'admin');
+      setNotifications(data);
     } catch (error) {
       console.error('Failed to load notifications:', error);
       // Mock data for demonstration
@@ -69,8 +71,10 @@ export default function NotificationsScreen() {
   };
 
   const markAsRead = async (notificationId: string) => {
+    if (!user?.id) return;
+    
     try {
-      await api.put(`/notifications/${notificationId}/read`);
+      await api.markNotificationRead(notificationId, user.id);
       setNotifications(prev =>
         prev.map(n => n.id === notificationId ? { ...n, is_read: true } : n)
       );

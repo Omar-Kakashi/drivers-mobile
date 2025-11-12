@@ -24,8 +24,8 @@ export default function ApprovalsScreen() {
 
   const loadPendingRequests = async () => {
     try {
-      const response = await api.get('/leave-requests/pending');
-      setRequests(response.data);
+      const data = await api.getPendingLeaveRequests();
+      setRequests(data);
     } catch (error) {
       console.error('Failed to load requests:', error);
       // Mock data for demonstration
@@ -80,10 +80,8 @@ export default function ApprovalsScreen() {
           onPress: async () => {
             try {
               setProcessing(requestId);
-              await api.put(`/leave-requests/${requestId}/approve`, {
-                approved_by: 'admin',
-                signature: 'mobile_approval',
-              });
+              // Note: Approval requires signature - using placeholder
+              await api.approveLeaveRequest(requestId, 'data:image/png;base64,placeholder');
               Alert.alert('Success', 'Leave request approved');
               loadPendingRequests();
             } catch (error: any) {
@@ -109,10 +107,7 @@ export default function ApprovalsScreen() {
           onPress: async () => {
             try {
               setProcessing(requestId);
-              await api.put(`/leave-requests/${requestId}/reject`, {
-                rejected_by: 'admin',
-                rejection_reason: 'Rejected via mobile',
-              });
+              await api.rejectLeaveRequest(requestId, 'Rejected via mobile');
               Alert.alert('Success', 'Leave request rejected');
               loadPendingRequests();
             } catch (error: any) {

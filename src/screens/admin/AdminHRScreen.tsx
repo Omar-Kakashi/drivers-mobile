@@ -28,16 +28,22 @@ export default function AdminHRScreen() {
 
     try {
       setSubmitting(true);
-      await api.post('/leave-requests', {
-        employee_id: user?.id,
-        employee_type: 'admin',
-        employee_name: user?.name,
-        leave_type: leaveType,
-        start_date: startDate,
-        end_date: endDate,
-        reason: reason,
-        status: 'pending',
-      });
+      
+      if (!user?.id) {
+        Alert.alert('Error', 'User not logged in');
+        return;
+      }
+      
+      // Submit leave request with signature (placeholder for now)
+      await api.submitLeaveRequest(
+        user.id,
+        'admin',
+        leaveType,
+        startDate,
+        endDate,
+        reason,
+        'data:image/png;base64,placeholder' // Placeholder signature
+      );
 
       Alert.alert(
         'Success',
