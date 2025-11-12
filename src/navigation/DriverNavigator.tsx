@@ -4,8 +4,9 @@
 
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { TouchableOpacity, View, Text, StyleSheet } from 'react-native';
+import { TouchableOpacity, View, Text, StyleSheet, Platform } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { theme } from '../theme';
 import { useNavigation } from '@react-navigation/native';
 import { useUnreadNotificationCount } from '../hooks/useUnreadNotificationCount';
@@ -29,6 +30,7 @@ const Tab = createBottomTabNavigator();
 
 export default function DriverNavigator() {
   const { unreadCount } = useUnreadNotificationCount();
+  const insets = useSafeAreaInsets();
   
   return (
     <Tab.Navigator
@@ -36,17 +38,28 @@ export default function DriverNavigator() {
         tabBarActiveTintColor: theme.colors.driver.primary,
         tabBarInactiveTintColor: theme.colors.text.secondary,
         tabBarStyle: {
-          paddingBottom: 8,
+          height: Platform.OS === 'android' ? 65 + insets.bottom : 65,
+          paddingBottom: Platform.OS === 'android' ? insets.bottom : 8,
           paddingTop: 8,
-          height: 65,
+          paddingHorizontal: 0,
+          borderTopWidth: 1,
+          borderTopColor: theme.colors.border,
+          elevation: 8,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: -2 },
+          shadowOpacity: 0.1,
+          shadowRadius: 3,
         },
         tabBarItemStyle: {
-          flex: 1,
-          justifyContent: 'center',
-          alignItems: 'center',
+          paddingVertical: 5,
         },
         tabBarLabelStyle: {
           fontSize: 11,
+          marginTop: -5,
+          marginBottom: 5,
+        },
+        tabBarIconStyle: {
+          marginTop: 5,
         },
         headerShown: true,
         headerStyle: { backgroundColor: theme.colors.driver.primary },
