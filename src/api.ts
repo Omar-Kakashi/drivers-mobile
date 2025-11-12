@@ -19,14 +19,7 @@ import {
   AuthResponse,
 } from './types';
 
-// Backend URL candidates (will auto-detect which works)
-const POSSIBLE_DEV_URLS = [
-  'http://10.0.0.74:5000',       // Work network (current - auto-updated)
-  'http://10.0.0.27:5000',       // Work network (alternative)
-  'http://192.168.0.111:5000',  // Home network
-  'http://localhost:5000',       // Localhost fallback
-];
-
+// Production backend URL
 const PROD_BASE_URL = 'https://ostol.stsc.ae/api';
 
 // Environment switcher - __DEV__ is a global set by React Native
@@ -34,6 +27,64 @@ const __DEV__ = typeof __DEV__ !== 'undefined' ? __DEV__ : false;
 
 // Auto-detect working backend URL (cached in AsyncStorage)
 let detectedUrl: string | null = null;
+
+/**
+ * Generate possible backend URLs based on common network patterns
+ * Automatically scans for backend on any network (home, work, hotspot, etc.)
+ */
+function generatePossibleUrls(): string[] {
+  const urls: string[] = [];
+  
+  // Common private network ranges
+  const ranges = [
+    { base: '192.168.0', start: 1, end: 255 },    // Home WiFi (Class C)
+    { base: '192.168.1', start: 1, end: 255 },    // Home WiFi alternative
+    { base: '192.168.137', start: 1, end: 10 },   // Windows Mobile Hotspot
+    { base: '192.168.43', start: 1, end: 10 },    // Android Mobile Hotspot
+    { base: '172.20.10', start: 1, end: 10 },     // iPhone Mobile Hotspot
+    { base: '10.0.0', start: 1, end: 255 },       // Work/Office networks (10.0.0.x)
+    { base: '10.0.1', start: 1, end: 255 },       // Work/Office networks (10.0.1.x)
+    { base: '10.166.20', start: 1, end: 255 },    // Work/Office networks (10.166.20.x)
+    { base: '10.166.21', start: 1, end: 255 },    // Work/Office networks (10.166.21.x - YOUR LAPTOP!)
+  ];
+  
+  // Generate URLs for each range (limited scan to avoid long delays)
+  for (const range of ranges) {
+    for (let i = range.start; i <= range.end; i++) {
+      urls.push(`http://${range.base}.${i}:5000`);
+    }
+  }
+  
+  // Add localhost as fallback
+  urls.push('http://localhost:5000');
+  
+  return urls;
+}
+
+/**
+ * Test multiple URLs in parallel batches for faster detection
+ */
+async function testUrlBatch(urls: string[], batchSize: number = 10): Promise<string | null> {
+  for (let i = 0; i < urls.length; i += batchSize) {
+    const batch = urls.slice(i, i + batchSize);
+    const results = await Promise.allSettled(
+      batch.map(url => 
+        axios.get(`${url}/health`, { timeout: 1000 })
+          .then(res => res.status === 200 ? url : null)
+          .catch(() => null)
+      )
+    );
+    
+    // Return first successful URL
+    for (const result of results) {
+      if (result.status === 'fulfilled' && result.value) {
+        return result.value;
+      }
+    }
+  }
+  
+  return null;
+}
 
 async function detectBackendUrl(): Promise<string> {
   // Return cached URL if already detected
@@ -44,39 +95,53 @@ async function detectBackendUrl(): Promise<string> {
   // Try to get from AsyncStorage
   const cachedUrl = await AsyncStorage.getItem('backend_url');
   if (cachedUrl) {
-    console.log('📦 Using cached backend URL:', cachedUrl);
-    detectedUrl = cachedUrl;
-    return cachedUrl;
-  }
-
-  console.log('🔍 Auto-detecting backend URL...');
-  
-  // Test each URL
-  for (const url of POSSIBLE_DEV_URLS) {
+    // Verify cached URL still works
     try {
-      const response = await axios.get(`${url}/health/`, { timeout: 2000 });
+      const response = await axios.get(`${cachedUrl}/health`, { timeout: 2000 });
       if (response.status === 200) {
-        console.log(`✅ Backend detected at: ${url}`);
-        detectedUrl = url;
-        await AsyncStorage.setItem('backend_url', url);
-        return url;
+        console.log('📦 Using cached backend URL:', cachedUrl);
+        detectedUrl = cachedUrl;
+        return cachedUrl;
       }
     } catch (error) {
-      console.log(`⏭️  ${url} not reachable, trying next...`);
+      console.log('⚠️ Cached URL no longer works, re-scanning...');
+      await AsyncStorage.removeItem('backend_url');
     }
   }
 
-  // Fallback to first URL if none respond
-  console.warn('⚠️  No backend responded, using:', POSSIBLE_DEV_URLS[0]);
-  detectedUrl = POSSIBLE_DEV_URLS[0];
-  return detectedUrl;
+  console.log('🔍 Auto-detecting backend URL (smart network scan)...');
+  
+  // Generate and test URLs
+  const possibleUrls = generatePossibleUrls();
+  const foundUrl = await testUrlBatch(possibleUrls, 15); // Test 15 URLs at a time
+  
+  if (foundUrl) {
+    console.log(`✅ Backend detected at: ${foundUrl}`);
+    detectedUrl = foundUrl;
+    await AsyncStorage.setItem('backend_url', foundUrl);
+    return foundUrl;
+  }
+
+  // No backend found - inform user
+  console.error('❌ No backend found! Make sure Docker backend is running.');
+  throw new Error('Backend not reachable. Please start the backend server (docker-compose up).');
 }
 
-// Reset backend detection (call when network changes)
+// Reset backend detection (call when network changes or to force rescan)
 export const resetBackendDetection = async () => {
   detectedUrl = null;
   await AsyncStorage.removeItem('backend_url');
-  console.log('🔄 Backend detection reset');
+  console.log('🔄 Backend detection reset - will rescan on next API call');
+};
+
+// Get current backend URL (useful for debugging)
+export const getCurrentBackendUrl = () => detectedUrl || 'Not detected yet';
+
+// Force use of specific backend URL (useful for manual testing)
+export const forceBackendUrl = async (url: string) => {
+  detectedUrl = url;
+  await AsyncStorage.setItem('backend_url', url);
+  console.log('🔧 Forced backend URL:', url);
 };
 
 class BackendAPI {
