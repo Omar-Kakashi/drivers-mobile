@@ -39,7 +39,7 @@ export default function AdminDashboardScreen() {
           <Text style={styles.name}>{user?.name}</Text>
         </View>
         <TouchableOpacity onPress={logout} style={styles.logoutButton}>
-          <Ionicons name="log-out-outline" size={24} color={theme.colors.danger} />
+          <Ionicons name="log-out-outline" size={24} color={theme.colors.error} />
         </TouchableOpacity>
       </View>
 
