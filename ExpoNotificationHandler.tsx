@@ -225,20 +225,15 @@ async function sendTokenToBackend(expoPushToken: string) {
     const BACKEND_URL = 'https://ostol.stsc.ae/api'; // Your production backend
     // const BACKEND_URL = 'http://localhost:5000'; // Development backend
 
-    const response = await fetch(`${BACKEND_URL}/push-tokens/register`, {
+    const response = await fetch(`${BACKEND_URL}/fcm-tokens/register`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
         token: expoPushToken,
-        platform: Platform.OS,
-        deviceInfo: {
-          brand: Device.brand,
-          modelName: Device.modelName,
-          osName: Device.osName,
-          osVersion: Device.osVersion,
-        },
+        device_type: Platform.OS,
+        device_name: `${Device.brand} ${Device.modelName}`,
       }),
     });
 
