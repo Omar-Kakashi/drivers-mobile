@@ -35,6 +35,19 @@ export default function DriverNavigator() {
       screenOptions={({ navigation }) => ({
         tabBarActiveTintColor: theme.colors.driver.primary,
         tabBarInactiveTintColor: theme.colors.text.secondary,
+        tabBarStyle: {
+          paddingBottom: 8,
+          paddingTop: 8,
+          height: 65,
+        },
+        tabBarItemStyle: {
+          flex: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+        },
+        tabBarLabelStyle: {
+          fontSize: 11,
+        },
         headerShown: true,
         headerStyle: { backgroundColor: theme.colors.driver.primary },
         headerTintColor: theme.colors.text.white,
