@@ -201,9 +201,10 @@ async function registerForPushNotificationsAsync() {
  */
 async function detectBackendUrl(): Promise<string> {
   const POSSIBLE_BACKENDS = [
-    'http://192.168.0.111:5000',     // Home/Office Network 1
-    'http://192.168.1.111:5000',     // Home/Office Network 2
-    'http://10.0.0.111:5000',        // Alternative local network
+    'http://100.99.182.57:5000',     // Tailscale (works anywhere) - PRIORITY
+    'http://192.168.0.111:5000',     // Home/Office WiFi
+    'http://192.168.1.111:5000',     // Alternative WiFi
+    'http://10.0.0.111:5000',        // Work network
     'https://ostol.stsc.ae/api',     // Production backend (fallback)
   ];
 

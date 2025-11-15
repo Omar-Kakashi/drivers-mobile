@@ -62,7 +62,6 @@ export const SplashScreen: React.FC = () => {
         <Image
           source={require('../../assets/logo-icon-only.png')}
           style={styles.logo}
-          resizeMode="contain"
         />
       </Animated.View>
 
@@ -90,6 +89,7 @@ const styles = StyleSheet.create({
     height: width * 0.4,
     maxWidth: 200,
     maxHeight: 200,
+    resizeMode: 'contain',
   },
   textContainer: {
     alignItems: 'center',

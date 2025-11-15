@@ -27,6 +27,7 @@
         "RECEIVE_BOOT_COMPLETED",
         "VIBRATE"
       ],
+      "usesCleartextTraffic": true,
       "useNextNotificationsApi": true,
       "googleServicesFile": "./google-services.json"
     },

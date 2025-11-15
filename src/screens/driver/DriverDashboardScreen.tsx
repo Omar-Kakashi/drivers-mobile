@@ -3,7 +3,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator, Alert, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { theme } from '../../theme';
@@ -34,13 +34,16 @@ export default function DriverDashboardScreen() {
 
   const loadDashboardData = async () => {
     try {
+      console.log('📊 Loading dashboard for driver:', driver.id, driver.driver_id);
       const data = await backendAPI.getDriverDashboard(driver.id);
+      console.log('✅ Dashboard data received:', JSON.stringify(data, null, 2));
       setCurrentAssignment(data.current_assignment);
       setBalance(data.balance);
       setNotificationsCount(data.notifications_count);
     } catch (error: any) {
+      console.error('❌ Dashboard load error:', error);
+      console.error('❌ Error details:', error.response?.data || error.message);
       toastLoadError();
-      console.error(error);
     } finally {
       setLoading(false);
     }
@@ -86,17 +89,28 @@ export default function DriverDashboardScreen() {
             <Ionicons name="car" size={24} color={theme.colors.primary} />
             <Text style={styles.cardTitle}>Current Assignment</Text>
           </View>
-          <View style={styles.assignmentDetails}>
-            <Text style={styles.licensePlate}>{currentAssignment.vehicle_license_plate}</Text>
-            <Text style={styles.assignmentInfo}>
-              Since: {new Date(currentAssignment.assignment_date).toLocaleDateString()}
-            </Text>
-            <Text style={styles.assignmentInfo}>
-              Daily Rent: AED {currentAssignment.daily_rent.toFixed(2)}
-            </Text>
-            <Text style={styles.assignmentInfo}>
-              Status: <Text style={styles.statusActive}>{currentAssignment.status.toUpperCase()}</Text>
-            </Text>
+          <View style={styles.assignmentContainer}>
+            {currentAssignment.vehicle_image_url && (
+              <Image 
+                source={{ uri: currentAssignment.vehicle_image_url }}
+                style={styles.vehicleImage}
+              />
+            )}
+            <View style={styles.assignmentDetails}>
+              <Text style={styles.licensePlate}>{currentAssignment.vehicle_license_plate}</Text>
+              {currentAssignment.make_model && (
+                <Text style={styles.makeModel}>{currentAssignment.make_model}</Text>
+              )}
+              <Text style={styles.assignmentInfo}>
+                Since: {new Date(currentAssignment.assignment_date).toLocaleDateString()}
+              </Text>
+              <Text style={styles.assignmentInfo}>
+                Daily Rent: AED {currentAssignment.daily_rent.toFixed(2)}
+              </Text>
+              <Text style={styles.assignmentInfo}>
+                Status: <Text style={styles.statusActive}>{currentAssignment.status.toUpperCase()}</Text>
+              </Text>
+            </View>
           </View>
         </View>
       ) : (
@@ -143,7 +157,7 @@ export default function DriverDashboardScreen() {
         <Text style={styles.sectionTitle}>Quick Actions</Text>
         <TouchableOpacity 
           style={styles.actionButton}
-          onPress={() => navigation.navigate('DriverHR')}
+          onPress={() => navigation.navigate('Leave Request')}
         >
           <Ionicons name="document-text" size={20} color={theme.colors.primary} />
           <Text style={styles.actionText}>Request Leave</Text>
@@ -238,12 +252,27 @@ const styles = StyleSheet.create({
     ...theme.typography.h3,
     marginLeft: theme.spacing.sm,
   },
+  assignmentContainer: {
+    gap: theme.spacing.md,
+  },
+  vehicleImage: {
+    width: '100%',
+    height: 200,
+    borderRadius: theme.borderRadius.md,
+    backgroundColor: theme.colors.background,
+    resizeMode: 'cover',
+  },
   assignmentDetails: {
     gap: theme.spacing.sm,
   },
   licensePlate: {
     ...theme.typography.h2,
     color: theme.colors.primary,
+  },
+  makeModel: {
+    ...theme.typography.h4,
+    color: theme.colors.text.primary,
+    marginTop: -4,
   },
   assignmentInfo: {
     ...theme.typography.body1,

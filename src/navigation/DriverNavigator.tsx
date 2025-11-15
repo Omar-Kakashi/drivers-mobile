@@ -34,32 +34,21 @@ export default function DriverNavigator() {
   
   return (
     <Tab.Navigator
+      sceneContainerStyle={{ backgroundColor: 'transparent' }}
       screenOptions={({ navigation }) => ({
         tabBarActiveTintColor: theme.colors.driver.primary,
         tabBarInactiveTintColor: theme.colors.text.secondary,
         tabBarStyle: {
-          height: Platform.OS === 'android' ? 65 + insets.bottom : 65,
           paddingBottom: Platform.OS === 'android' ? insets.bottom : 8,
           paddingTop: 8,
-          paddingHorizontal: 0,
-          borderTopWidth: 1,
-          borderTopColor: theme.colors.border,
-          elevation: 8,
-          shadowColor: '#000',
-          shadowOffset: { width: 0, height: -2 },
-          shadowOpacity: 0.1,
-          shadowRadius: 3,
-        },
-        tabBarItemStyle: {
-          paddingVertical: 5,
+          height: (Platform.OS === 'android' ? 60 : 50) + insets.bottom,
         },
         tabBarLabelStyle: {
           fontSize: 11,
-          marginTop: -5,
-          marginBottom: 5,
+          paddingBottom: Platform.OS === 'android' ? 4 : 0,
         },
-        tabBarIconStyle: {
-          marginTop: 5,
+        tabBarItemStyle: {
+          flex: 1,
         },
         headerShown: true,
         headerStyle: { backgroundColor: theme.colors.driver.primary },
@@ -97,6 +86,7 @@ export default function DriverNavigator() {
         name="Assignments"
         component={MyAssignmentsScreen}
         options={{
+          tabBarLabel: 'Assign',
           tabBarIcon: ({ color, size }) => <Ionicons name="car" size={size} color={color} />,
         }}
       />
@@ -111,6 +101,7 @@ export default function DriverNavigator() {
         name="Documents"
         component={DocumentsScreen}
         options={{
+          tabBarLabel: 'Docs',
           tabBarIcon: ({ color, size }) => <Ionicons name="folder" size={size} color={color} />,
         }}
       />

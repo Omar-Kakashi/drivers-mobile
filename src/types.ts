@@ -37,6 +37,9 @@ export interface Assignment {
   id: string;
   vehicle_id: string;
   vehicle_license_plate?: string;
+  license_plate?: string;
+  make_model?: string;
+  vehicle_image_url?: string;
   primary_driver_id: string;
   secondary_driver_id: string | null;
   assignment_date: string;

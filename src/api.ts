@@ -25,6 +25,9 @@ const PROD_BASE_URL = 'https://ostol.stsc.ae/api';
 // Environment switcher - __DEV__ is a global set by React Native
 const __DEV__ = typeof __DEV__ !== 'undefined' ? __DEV__ : false;
 
+// API Version - increment this to force cache clear on breaking changes
+const API_VERSION = '6'; // Tailscale enabled - works on any network!
+
 // Auto-detect working backend URL (cached in AsyncStorage)
 let detectedUrl: string | null = null;
 
@@ -35,28 +38,39 @@ let detectedUrl: string | null = null;
 function generatePossibleUrls(): string[] {
   const urls: string[] = [];
   
-  // Common private network ranges
-  const ranges = [
+  // Priority order: WiFi (same network) → Tailscale → USB
+  const ranges = [];
+  
+  // 1. Direct WiFi IP (fastest when on same network)
+  urls.push('http://192.168.0.111:5000'); // Laptop WiFi IP
+  
+  // 2. Tailscale (works ANYWHERE - WiFi, cellular, any network)
+  urls.push('http://100.99.182.57:5000'); // Tailscale laptop (kakashi)
+  
+  // 3. USB debugging (adb reverse tcp:5000 tcp:5000)
+  urls.push('http://localhost:5000');
+  urls.push('http://10.0.2.2:5000'); // Android emulator host access
+  
+  // Then WiFi/Hotspot ranges (fallback when not on USB)
+  const wifiRanges = [
+    { base: '10.166.21', start: 110, end: 115 },  // Work/Office networks (10.166.21.x - YOUR LAPTOP!)
+    { base: '172.20.10', start: 1, end: 10 },     // iPhone Mobile Hotspot
+    { base: '192.168.43', start: 1, end: 10 },    // Android Mobile Hotspot
+    { base: '192.168.137', start: 1, end: 10 },   // Windows Mobile Hotspot
     { base: '192.168.0', start: 1, end: 255 },    // Home WiFi (Class C)
     { base: '192.168.1', start: 1, end: 255 },    // Home WiFi alternative
-    { base: '192.168.137', start: 1, end: 10 },   // Windows Mobile Hotspot
-    { base: '192.168.43', start: 1, end: 10 },    // Android Mobile Hotspot
-    { base: '172.20.10', start: 1, end: 10 },     // iPhone Mobile Hotspot
     { base: '10.0.0', start: 1, end: 255 },       // Work/Office networks (10.0.0.x)
     { base: '10.0.1', start: 1, end: 255 },       // Work/Office networks (10.0.1.x)
     { base: '10.166.20', start: 1, end: 255 },    // Work/Office networks (10.166.20.x)
-    { base: '10.166.21', start: 1, end: 255 },    // Work/Office networks (10.166.21.x - YOUR LAPTOP!)
+    { base: '10.166.21', start: 1, end: 255 },    // Work/Office networks (full range)
   ];
   
-  // Generate URLs for each range (limited scan to avoid long delays)
-  for (const range of ranges) {
+  // Generate URLs for WiFi ranges (after USB/localhost)
+  for (const range of wifiRanges) {
     for (let i = range.start; i <= range.end; i++) {
       urls.push(`http://${range.base}.${i}:5000`);
     }
   }
-  
-  // Add localhost as fallback
-  urls.push('http://localhost:5000');
   
   return urls;
 }
@@ -90,6 +104,14 @@ async function detectBackendUrl(): Promise<string> {
   // Return cached URL if already detected
   if (detectedUrl) {
     return detectedUrl;
+  }
+
+  // Check API version - clear cache if version changed
+  const cachedVersion = await AsyncStorage.getItem('api_version');
+  if (cachedVersion !== API_VERSION) {
+    console.log('🔄 API version changed - clearing backend cache');
+    await AsyncStorage.removeItem('backend_url');
+    await AsyncStorage.setItem('api_version', API_VERSION);
   }
 
   // Try to get from AsyncStorage
@@ -150,18 +172,17 @@ class BackendAPI {
 
   constructor() {
     // Initialize with placeholder - will be set dynamically
+    // ALWAYS use Tailscale IP for dev client, production URL for release builds
     this.client = axios.create({
-      baseURL: __DEV__ ? POSSIBLE_DEV_URLS[0] : PROD_BASE_URL,
+      baseURL: 'http://100.99.182.57:5000', // Tailscale IP (works anywhere)
       timeout: 10000,
       headers: {
         'Content-Type': 'application/json',
       },
     });
 
-    // Initialize backend URL detection in development
-    if (__DEV__) {
-      this.initializeBackendUrl();
-    }
+    // Initialize backend URL detection (will use Tailscale if available)
+    this.initializeBackendUrl();
 
     // Request interceptor - Add JWT token & ensure correct baseURL
     this.client.interceptors.request.use(
@@ -207,6 +228,7 @@ class BackendAPI {
     this.client.defaults.baseURL = url;
     this.baseUrlInitialized = true;
     console.log('✅ Mobile API initialized with backend:', url);
+    console.log('🔍 Axios baseURL is now:', this.client.defaults.baseURL);
   }
 
   // Get current backend URL
@@ -275,8 +297,31 @@ class BackendAPI {
     balance: Balance;
     notifications_count: number;
   }> {
-    const { data } = await this.client.get(`/drivers/${driverId}/dashboard`);
-    return data;
+    // Ensure backend URL is initialized before API call
+    if (__DEV__) {
+      await this.initializeBackendUrl();
+    }
+    console.log('🔗 Full Request URL:', this.client.defaults.baseURL + `/drivers/${driverId}/dashboard`);
+    console.log('🔗 Axios baseURL at request time:', this.client.defaults.baseURL);
+    
+    try {
+      const { data } = await this.client.get(`/drivers/${driverId}/dashboard`);
+      return data;
+    } catch (error: any) {
+      console.error('❌ Dashboard API Error:', error.message);
+      if (error.response) {
+        console.error('❌ Response status:', error.response.status);
+        console.error('❌ Response data:', error.response.data);
+      } else if (error.request) {
+        console.error('❌ No response received - network issue');
+        console.error('❌ Request config:', JSON.stringify({
+          url: error.config?.url,
+          baseURL: error.config?.baseURL,
+          timeout: error.config?.timeout
+        }));
+      }
+      throw error;
+    }
   }
 
   async getDriverAssignment(driverId: string): Promise<{

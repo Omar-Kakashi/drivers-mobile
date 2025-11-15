@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "110614147121",
+    "project_id": "stsc-fleet-management",
+    "storage_bucket": "stsc-fleet-management.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:110614147121:android:88c6a66248bc622f17a510",
+        "android_client_info": {
+          "package_name": "com.ostol.mobile"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCM4Ta6ic5YIY2eglr1TI6BOriNFPZBki4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
