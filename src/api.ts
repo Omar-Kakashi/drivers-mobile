@@ -249,8 +249,29 @@ class BackendAPI {
     // Ensure backend URL is initialized before login
     await this.initializeBackendUrl();
     
-    const { data } = await this.client.post('/auth/driver-login', { identifier, password });
-    return data;
+    console.log('🔐 Driver Login Request:', { 
+      identifier, 
+      baseURL: this.client.defaults.baseURL,
+      url: '/auth/driver-login',
+      __DEV__,
+      detectedUrl
+    });
+    try {
+      const { data } = await this.client.post('/auth/driver-login', { identifier, password });
+      console.log('✅ Driver Login Success');
+      return data;
+    } catch (error: any) {
+      console.error('❌ Driver Login Failed:', {
+        status: error.response?.status,
+        statusText: error.response?.statusText,
+        message: error.message,
+        data: error.response?.data,
+        url: error.config?.url,
+        baseURL: error.config?.baseURL,
+        fullURL: error.config?.baseURL + error.config?.url
+      });
+      throw error;
+    }
   }
 
   /**
