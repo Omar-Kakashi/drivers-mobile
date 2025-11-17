@@ -20,7 +20,7 @@ import {
 } from './types';
 
 // Production backend URL
-const PROD_BASE_URL = 'https://ostol.stsc.ae/api';
+const PROD_BASE_URL = 'http://100.99.182.57:5000'; // Tailscale IP for testing
 
 // Environment switcher - __DEV__ is a global set by React Native
 const __DEV__ = typeof __DEV__ !== 'undefined' ? __DEV__ : false;
