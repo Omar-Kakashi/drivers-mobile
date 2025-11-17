@@ -38,14 +38,14 @@ let detectedUrl: string | null = null;
 function generatePossibleUrls(): string[] {
   const urls: string[] = [];
   
-  // Priority order: WiFi (same network) → Tailscale → USB
+  // Priority order: Tailscale → WiFi → USB
   const ranges = [];
   
-  // 1. Direct WiFi IP (fastest when on same network)
-  urls.push('http://192.168.0.111:5000'); // Laptop WiFi IP
-  
-  // 2. Tailscale (works ANYWHERE - WiFi, cellular, any network)
+  // 1. Tailscale (works ANYWHERE - WiFi, cellular, any network) - HIGHEST PRIORITY
   urls.push('http://100.99.182.57:5000'); // Tailscale laptop (kakashi)
+  
+  // 2. Direct WiFi IP (fastest when on same network)
+  urls.push('http://192.168.0.111:5000'); // Laptop WiFi IP
   
   // 3. USB debugging (adb reverse tcp:5000 tcp:5000)
   urls.push('http://localhost:5000');
@@ -83,7 +83,7 @@ async function testUrlBatch(urls: string[], batchSize: number = 10): Promise<str
     const batch = urls.slice(i, i + batchSize);
     const results = await Promise.allSettled(
       batch.map(url => 
-        axios.get(`${url}/health`, { timeout: 1000 })
+        axios.get(`${url}/health`, { timeout: 3000 })
           .then(res => res.status === 200 ? url : null)
           .catch(() => null)
       )
@@ -119,7 +119,7 @@ async function detectBackendUrl(): Promise<string> {
   if (cachedUrl) {
     // Verify cached URL still works
     try {
-      const response = await axios.get(`${cachedUrl}/health`, { timeout: 2000 });
+      const response = await axios.get(`${cachedUrl}/health`, { timeout: 5000 });
       if (response.status === 200) {
         console.log('📦 Using cached backend URL:', cachedUrl);
         detectedUrl = cachedUrl;
