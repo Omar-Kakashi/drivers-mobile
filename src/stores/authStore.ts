@@ -7,6 +7,7 @@ import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { backendAPI } from '../api';
 import { Driver, AdminUser, UserType } from '../types';
+import { registerPushTokenAfterLogin } from '../utils/pushNotificationHelper';
 
 interface AuthState {
   user: Driver | AdminUser | null;
@@ -52,6 +53,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         userType: response.user_type,
         token: response.token,
         isAuthenticated: true,
+      });
+
+      // 🔔 CRITICAL: Re-register FCM token with user_id after login
+      // This links the FCM token to the logged-in user so they can receive notifications
+      registerPushTokenAfterLogin(response.user.id, response.user_type).catch(err => {
+        console.warn('Failed to register push token:', err);
+        // Don't block login if push token registration fails
       });
     } catch (error: any) {
       console.error('Login failed:', error);

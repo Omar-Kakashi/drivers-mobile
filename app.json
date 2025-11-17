@@ -13,7 +13,10 @@
       "backgroundColor": "#001f3f"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "runtimeVersion": {
+        "policy": "appVersion"
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -25,11 +28,15 @@
       "permissions": [
         "NOTIFICATIONS",
         "RECEIVE_BOOT_COMPLETED",
+        "VIBRATE",
+        "NOTIFICATIONS",
+        "RECEIVE_BOOT_COMPLETED",
         "VIBRATE"
       ],
       "usesCleartextTraffic": true,
       "useNextNotificationsApi": true,
-      "googleServicesFile": "./google-services.json"
+      "googleServicesFile": "./google-services.json",
+      "runtimeVersion": "1.0.0"
     },
     "notification": {
       "icon": "./assets/icon.png",
@@ -47,6 +54,9 @@
       "eas": {
         "projectId": "9b1de6bc-a863-4b20-82d4-12b38c0352ba"
       }
+    },
+    "updates": {
+      "url": "https://u.expo.dev/9b1de6bc-a863-4b20-82d4-12b38c0352ba"
     }
   }
 }
