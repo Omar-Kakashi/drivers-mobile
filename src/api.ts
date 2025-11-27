@@ -359,13 +359,25 @@ class BackendAPI {
   }
 
   async getDriverBalance(driverId: string): Promise<Balance> {
-    const { data } = await this.client.get(`/drivers/${driverId}/balance`);
+    // ✅ FIXED: Use /balance/detailed endpoint (matches web app)
+    const { data } = await this.client.get(`/drivers/${driverId}/balance/detailed`);
     return data;
   }
 
-  async getDriverTransactions(driverId: string): Promise<Transaction[]> {
-    const { data } = await this.client.get(`/driver-balance/${driverId}/transactions`);
-    return data;
+  async getDriverTransactions(
+    driverId: string,
+    month?: number,
+    year?: number,
+    transactionType?: string
+  ): Promise<any> {
+    // ✅ FIXED: Use correct endpoint with filters (matches web app)
+    const params: any = {};
+    if (month) params.month = month;
+    if (year) params.year = year;
+    if (transactionType) params.transaction_type = transactionType;
+    
+    const { data } = await this.client.get(`/drivers/${driverId}/transactions`, { params });
+    return data; // Returns { transactions, total_count, opening_balance, total_income, total_expenses, net_change, current_balance }
   }
 
   // ==================== SETTLEMENTS ====================

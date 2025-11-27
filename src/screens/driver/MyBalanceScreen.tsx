@@ -69,47 +69,83 @@ export default function MyBalanceScreen() {
             style={styles.settlementsButton}
             onPress={() => navigation.navigate('Settlements')}
           >
-            <Ionicons name="document-text-outline" size={20} color={theme.colors.driver.primary} />
-            <Text style={styles.settlementsButtonText}>View Settlements</Text>
+            <Ionicons name="list-outline" size={20} color={theme.colors.driver.primary} />
+            <Text style={styles.settlementsButtonText}>View History</Text>
           </TouchableOpacity>
         </View>
         
         <View style={styles.summaryRow}>
+          <Text style={styles.summaryLabel}>Opening Balance</Text>
+          <Text style={[styles.summaryValue, { color: parseFloat(balance?.opening_balance || '0') >= 0 ? theme.colors.text.primary : theme.colors.error }]}>
+            AED {formatAmount(balance?.opening_balance)}
+          </Text>
+        </View>
+        
+        <View style={styles.summaryRow}>
+          <Text style={styles.summaryLabel}>Total Uber Income</Text>
+          <Text style={[styles.summaryValue, { color: theme.colors.success }]}>
+            AED {formatAmount(balance?.total_uber_income)}
+          </Text>
+        </View>
+        
+        <View style={styles.summaryRow}>
           <Text style={styles.summaryLabel}>Total Rent Charged</Text>
-          <Text style={styles.summaryValue}>AED {formatAmount(balance?.total_rent)}</Text>
+          <Text style={styles.summaryValue}>AED {formatAmount(balance?.total_rent_charged)}</Text>
         </View>
         
         <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>Total Payments</Text>
-          <Text style={[styles.summaryValue, { color: theme.colors.success }]}>AED {formatAmount(balance?.total_payments)}</Text>
+          <Text style={styles.summaryLabel}>Total Salik</Text>
+          <Text style={styles.summaryValue}>AED {formatAmount(balance?.total_salik)}</Text>
         </View>
         
         <View style={styles.summaryRow}>
-          <Text style={styles.summaryLabel}>Total Credits</Text>
-          <Text style={[styles.summaryValue, { color: theme.colors.warning }]}>AED {formatAmount(balance?.total_credits)}</Text>
+          <Text style={styles.summaryLabel}>Total Traffic Fines</Text>
+          <Text style={styles.summaryValue}>AED {formatAmount(balance?.total_traffic_fines)}</Text>
+        </View>
+        
+        <View style={styles.summaryRow}>
+          <Text style={styles.summaryLabel}>Total Internal Fines</Text>
+          <Text style={styles.summaryValue}>AED {formatAmount(balance?.total_internal_fines)}</Text>
+        </View>
+        
+        <View style={styles.summaryRow}>
+          <Text style={styles.summaryLabel}>Total Payments Received</Text>
+          <Text style={[styles.summaryValue, { color: theme.colors.success }]}>
+            AED {formatAmount(balance?.total_payments_received)}
+          </Text>
         </View>
       </View>
 
-      {balance?.last_payment_date && (
+      {balance?.last_settlement_date && (
         <View style={styles.card}>
-          <Text style={styles.cardTitle}>Last Payment</Text>
+          <Text style={styles.cardTitle}>Last Settlement</Text>
           <View style={styles.summaryRow}>
             <Text style={styles.summaryLabel}>Date</Text>
             <Text style={styles.summaryValue}>
-              {new Date(balance.last_payment_date).toLocaleDateString()}
+              {new Date(balance.last_settlement_date).toLocaleDateString()}
             </Text>
           </View>
           <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Amount</Text>
-            <Text style={[styles.summaryValue, { color: theme.colors.success }]}>
-              AED {formatAmount(balance.last_payment_amount)}
+            <Text style={styles.summaryLabel}>Status</Text>
+            <Text style={[styles.summaryValue, { 
+              color: balance.settlement_status === 'completed' ? theme.colors.success : theme.colors.warning 
+            }]}>
+              {balance.settlement_status === 'completed' ? '✓ Completed' : '⏳ Pending'}
             </Text>
           </View>
+          {balance.is_in_shared_assignment && (
+            <View style={styles.summaryRow}>
+              <Text style={styles.summaryLabel}>Assignment Type</Text>
+              <Text style={[styles.summaryValue, { color: theme.colors.driver.primary }]}>
+                🤝 Shared Vehicle
+              </Text>
+            </View>
+          )}
         </View>
       )}
 
       <View style={styles.infoCard}>
-        <Text style={styles.infoText}>💡 For detailed transaction history, please contact the office or use the web portal.</Text>
+        <Text style={styles.infoText}>💡 Balance is calculated in real-time from your transaction history. Tap "View History" to see detailed breakdown.</Text>
       </View>
     </ScrollView>
   );

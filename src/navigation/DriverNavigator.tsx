@@ -15,7 +15,7 @@ import { useUnreadNotificationCount } from '../hooks/useUnreadNotificationCount'
 import DriverDashboardScreen from '../screens/driver/DriverDashboardScreen';
 import MyAssignmentsScreen from '../screens/driver/MyAssignmentsScreen';
 import MyBalanceScreen from '../screens/driver/MyBalanceScreen';
-import DriverSettlementsScreen from '../screens/driver/DriverSettlementsScreen';
+import DriverTransactionHistoryScreen from '../screens/driver/DriverTransactionHistoryScreen';
 import DriverHRScreen from '../screens/driver/DriverHRScreen';
 import DriverHRHubScreen from '../screens/driver/DriverHRHubScreen';
 import DocumentsScreen from '../screens/driver/DocumentsScreen';
@@ -174,10 +174,10 @@ export default function DriverNavigator() {
       />
       <Tab.Screen
         name="Settlements"
-        component={DriverSettlementsScreen}
+        component={DriverTransactionHistoryScreen}
         options={{
           tabBarButton: () => null,
-          title: 'Settlement History',
+          title: 'Transaction History',
         }}
       />
     </Tab.Navigator>
