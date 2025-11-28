@@ -41,12 +41,15 @@ export default function DriverLoginScreen({ navigation }: any) {
         return id;
       };
 
-      const processedIdentifier = normalizeIdentifier(identifier.trim());
+      const processedIdentifier = String(normalizeIdentifier(identifier.trim()));
       console.log('Attempting login with identifier:', processedIdentifier);
       await login(processedIdentifier, password, 'driver');
       // Navigation handled by RootNavigator after auth state changes
     } catch (error: any) {
-      toastError(error, 'Login Failed');
+      // Provide clearer error messages for validation or authentication failures
+      const serverMessage = error?.response?.data?.detail || error?.response?.data || error?.message;
+      console.error('Driver login error:', serverMessage);
+      toastError(serverMessage || error, 'Login Failed');
     } finally {
       setLoading(false);
     }

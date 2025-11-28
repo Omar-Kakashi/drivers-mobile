@@ -37,7 +37,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       
       let response;
       if (type === 'driver') {
-        response = await backendAPI.driverLogin(identifier, password);
+        // Ensure identifier is always sent as string (avoid 422 from pydantic if numeric)
+        response = await backendAPI.driverLogin(String(identifier), password);
       } else {
         response = await backendAPI.adminLogin(identifier, password);
       }

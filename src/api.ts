@@ -250,14 +250,16 @@ class BackendAPI {
     await this.initializeBackendUrl();
     
     console.log('🔐 Driver Login Request:', { 
-      identifier, 
+      identifier: String(identifier), 
       baseURL: this.client.defaults.baseURL,
       url: '/auth/driver-login',
       __DEV__,
       detectedUrl
     });
     try {
-      const { data } = await this.client.post('/auth/driver-login', { identifier, password });
+      // Ensure identifier is always sent as a string - Pydantic expects a string
+      const payload = { identifier: String(identifier), password };
+      const { data } = await this.client.post('/auth/driver-login', payload);
       console.log('✅ Driver Login Success');
       return data;
     } catch (error: any) {
