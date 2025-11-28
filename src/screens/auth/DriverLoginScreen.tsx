@@ -24,7 +24,26 @@ export default function DriverLoginScreen({ navigation }: any) {
 
     setLoading(true);
     try {
-      await login(identifier.trim(), password, 'driver');
+      // Normalize identifier: if phone-like, convert to +971 format for UAE mobile
+      const normalizeIdentifier = (id: string) => {
+        if (!id) return id;
+        const cleaned = id.replace(/[^0-9+]/g, '');
+        // If it already has +, assume valid international format
+        if (cleaned.startsWith('+')) return cleaned;
+        // UAE mobile numbers are typically 9 digits starting with 5, or 8 digits after 0
+        const digits = cleaned.replace(/^0+/, '');
+        if (/^5[0-9]{7,8}$/.test(digits)) {
+          // if 8 digits, it's probably 5xxxxxxx; add +971
+          return `+971${digits}`;
+        }
+        // If numeric but not starting 5, send as-is (may be driver ID)
+        if (/^[0-9]+$/.test(cleaned)) return cleaned;
+        return id;
+      };
+
+      const processedIdentifier = normalizeIdentifier(identifier.trim());
+      console.log('Attempting login with identifier:', processedIdentifier);
+      await login(processedIdentifier, password, 'driver');
       // Navigation handled by RootNavigator after auth state changes
     } catch (error: any) {
       toastError(error, 'Login Failed');
