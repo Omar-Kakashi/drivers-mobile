@@ -69,8 +69,31 @@ export async function registerPushTokenAfterLogin(userId: string, userType: 'dri
     
     console.log('📱 Re-registering FCM token with user_id:', userId);
 
-    // Register token with backend
-    const response = await fetch(`${BACKEND_URL}/fcm-tokens/register`, {
+    // Register token with backend - attempt with detected URL, then try without '/api' suffix if it exists and first attempt fails
+    const attemptRegister = async (url: string) => {
+      return await fetch(`${url}/fcm-tokens/register`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-User-ID': userId,
+          'X-User-Type': userType,
+        },
+        body: JSON.stringify({
+          token: fcmToken,
+          device_type: Platform.OS,
+          device_name: `${Device.brand} ${Device.modelName}`,
+        }),
+      });
+    };
+
+    // First attempt - use detected backend URL
+    let response = await attemptRegister(BACKEND_URL);
+    if (!response.ok && response.status === 404 && BACKEND_URL.endsWith('/api')) {
+      // Likely local backend doesn't serve under '/api' path. Try without '/api'
+      const stripped = BACKEND_URL.replace(/\/api\/?$/, '');
+      console.log('⚠️ Detected /api path returned 404 - retrying without /api using:', stripped);
+      response = await attemptRegister(stripped);
+    }
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
