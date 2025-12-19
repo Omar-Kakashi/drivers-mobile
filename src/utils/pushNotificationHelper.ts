@@ -9,15 +9,15 @@ import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 /**
- * Detect available backend (tries local networks first, then production)
+ * Detect available backend (tries local networks first)
  */
 async function detectBackendUrl(): Promise<string> {
   const POSSIBLE_BACKENDS = [
-    'http://100.99.182.57:5000',     // Tailscale (works anywhere) - PRIORITY
+    'http://100.99.182.57/api',      // Tailscale via nginx (PRIORITY)
+    'http://100.99.182.57:5000',     // Tailscale direct (fallback)
     'http://192.168.0.111:5000',     // Home/Office WiFi
-    'http://192.168.1.111:5000',     // Alternative WiFi
-    'http://10.0.0.111:5000',        // Work network
-    'https://ostol.stsc.ae/api',     // Production backend (fallback)
+    'http://10.0.2.2/api',           // Android emulator via nginx
+    'http://localhost/api',           // Local nginx
   ];
 
   for (const url of POSSIBLE_BACKENDS) {
@@ -25,7 +25,8 @@ async function detectBackendUrl(): Promise<string> {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 2000); // 2 second timeout
 
-      const response = await fetch(`${url}/`, {
+      const healthUrl = url.endsWith('/api') ? `${url}/health` : `${url}/health`;
+      const response = await fetch(healthUrl, {
         method: 'GET',
         signal: controller.signal,
       });
@@ -40,7 +41,8 @@ async function detectBackendUrl(): Promise<string> {
     }
   }
 
-  return 'https://ostol.stsc.ae/api';
+  // Default to Tailscale nginx
+  return 'http://100.99.182.57/api';
 }
 
 /**
@@ -94,18 +96,7 @@ export async function registerPushTokenAfterLogin(userId: string, userType: 'dri
       console.log('⚠️ Detected /api path returned 404 - retrying without /api using:', stripped);
       response = await attemptRegister(stripped);
     }
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-User-ID': userId,
-        'X-User-Type': userType,
-      },
-      body: JSON.stringify({
-        token: fcmToken,
-        device_type: Platform.OS,
-        device_name: `${Device.brand} ${Device.modelName}`,
-      }),
-    });
+    
 
     if (response.ok) {
       console.log('✅ Push token successfully registered with user_id');

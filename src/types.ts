@@ -57,6 +57,12 @@ export interface Balance {
   total_rent_due: number;
   total_payments: number;
   total_credits: number;
+  // Detailed breakdown
+  total_salik?: number;
+  total_fines?: number;
+  total_fuel?: number;
+  total_services?: number;
+  other_expenses?: number;
 }
 
 export interface Transaction {

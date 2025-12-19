@@ -1,91 +1,121 @@
-/**
- * Login Type Screen - Choose Driver or Admin Login
- */
-
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import { View, Text, StyleSheet, Image } from 'react-native';
 import { theme } from '../../theme';
+import { Screen } from '../../components/Screen';
+import { Button } from '../../components/Button';
+import { Card } from '../../components/Card';
+import { Ionicons } from '@expo/vector-icons';
+import { Logo } from '../../components/Logo';
 
 export default function LoginTypeScreen({ navigation }: any) {
   return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Ostol Mobile</Text>
-        <Text style={styles.subtitle}>Fleet Management System</Text>
+    <Screen style={styles.container}>
+      <View style={styles.content}>
+        <View style={styles.header}>
+          <Logo size={100} style={styles.logo} />
+          <Text style={styles.title}>Ostol</Text>
+          <Text style={styles.subtitle}>Fleet Management System</Text>
+        </View>
+
+        <View style={styles.buttonContainer}>
+          <Card variant="elevated" style={styles.actionCard}>
+            <View style={styles.cardHeader}>
+              <View style={[styles.iconBox, { backgroundColor: theme.colors.driver.light }]}>
+                <Ionicons name="person" size={24} color={theme.colors.driver.primary} />
+              </View>
+              <View>
+                <Text style={styles.roleTitle}>Driver</Text>
+                <Text style={styles.roleSubtitle}>Access your fleet dashboard</Text>
+              </View>
+            </View>
+            <Button
+              title="Driver Login"
+              onPress={() => navigation.navigate('DriverLogin')}
+              fullWidth
+            />
+          </Card>
+
+          <Card variant="elevated" style={styles.actionCard}>
+            <View style={styles.cardHeader}>
+              <View style={[styles.iconBox, { backgroundColor: theme.colors.admin.light }]}>
+                <Ionicons name="shield-checkmark" size={24} color={theme.colors.admin.primary} />
+              </View>
+              <View>
+                <Text style={styles.roleTitle}>Admin</Text>
+                <Text style={styles.roleSubtitle}>Manage fleet operations</Text>
+              </View>
+            </View>
+            <Button
+              title="Admin Login"
+              variant="secondary"
+              onPress={() => navigation.navigate('AdminLogin')}
+              fullWidth
+            />
+          </Card>
+        </View>
+
+        <Text style={styles.footer}>Version 1.0.0</Text>
       </View>
-
-      <View style={styles.buttonContainer}>
-        <TouchableOpacity
-          style={[styles.button, styles.driverButton]}
-          onPress={() => navigation.navigate('DriverLogin')}
-        >
-          <Text style={styles.buttonText}>Driver Login</Text>
-          <Text style={styles.buttonSubtext}>For fleet drivers</Text>
-        </TouchableOpacity>
-
-        <TouchableOpacity
-          style={[styles.button, styles.adminButton]}
-          onPress={() => navigation.navigate('AdminLogin')}
-        >
-          <Text style={styles.buttonText}>Admin Login</Text>
-          <Text style={styles.buttonSubtext}>For staff members</Text>
-        </TouchableOpacity>
-      </View>
-
-      <Text style={styles.footer}>Version 1.0.0</Text>
-    </View>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     backgroundColor: theme.colors.background,
-    padding: theme.spacing.xl,
+  },
+  content: {
+    flex: 1,
+    padding: theme.layout.containerPadding,
     justifyContent: 'center',
   },
   header: {
     alignItems: 'center',
-    marginBottom: theme.spacing.xl * 2,
+    marginBottom: theme.spacing.xl,
+  },
+  logo: {
+    marginBottom: theme.spacing.md,
   },
   title: {
     ...theme.typography.h1,
     color: theme.colors.primary,
-    marginBottom: theme.spacing.sm,
+    marginBottom: theme.spacing.xs,
   },
   subtitle: {
     ...theme.typography.body1,
     color: theme.colors.text.secondary,
   },
   buttonContainer: {
-    gap: theme.spacing.lg,
+    gap: theme.spacing.md,
   },
-  button: {
-    padding: theme.spacing.xl,
-    borderRadius: theme.borderRadius.lg,
+  actionCard: {
+    padding: theme.spacing.lg,
+  },
+  cardHeader: {
+    flexDirection: 'row',
     alignItems: 'center',
-    ...theme.shadows.medium,
+    marginBottom: theme.spacing.lg,
+    gap: theme.spacing.md,
   },
-  driverButton: {
-    backgroundColor: theme.colors.primary,
+  iconBox: {
+    width: 48,
+    height: 48,
+    borderRadius: theme.borderRadius.md,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  adminButton: {
-    backgroundColor: theme.colors.secondary,
-  },
-  buttonText: {
+  roleTitle: {
     ...theme.typography.h3,
-    color: theme.colors.text.white,
-    marginBottom: theme.spacing.xs,
+    color: theme.colors.text.primary,
   },
-  buttonSubtext: {
-    ...theme.typography.body2,
-    color: theme.colors.text.white,
-    opacity: 0.9,
+  roleSubtitle: {
+    ...theme.typography.caption,
+    color: theme.colors.text.secondary,
   },
   footer: {
     ...theme.typography.caption,
-    color: theme.colors.text.secondary,
+    color: theme.colors.text.disabled,
     textAlign: 'center',
-    marginTop: theme.spacing.xl * 2,
+    marginTop: theme.spacing.xxl,
   },
 });

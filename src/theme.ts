@@ -1,84 +1,117 @@
 /**
  * Ostol Mobile Theme - Consistent styling
+ * Modern, accessible, and premium design system
  */
 
 export const theme = {
   colors: {
-    primary: '#1976d2',
-    primaryDark: '#1565c0',
-    primaryLight: '#42a5f5',
-    secondary: '#ff9800',
-    success: '#4caf50',
-    warning: '#ff9800',
-    error: '#f44336',
-    info: '#2196f3',
-    background: '#f5f5f5',
-    surface: '#ffffff',
+    // Primary - Deep energetic blue
+    primary: '#2563EB',
+    primaryDark: '#1E40AF',
+    primaryLight: '#60A5FA',
+    
+    // Secondary - Vibrant accent (e.g., for actions)
+    secondary: '#F59E0B',
+    
+    // Functional Colors
+    success: '#10B981',
+    warning: '#F59E0B',
+    error: '#EF4444',
+    info: '#3B82F6',
+    
+    // Neutrals
+    background: '#F8FAFC', // Very light cool gray for app background
+    surface: '#FFFFFF',    // Pure white for cards/surfaces
+    
     text: {
-      primary: '#212121',
-      secondary: '#757575',
-      disabled: '#bdbdbd',
-      white: '#ffffff',
+      primary: '#1E293B',   // Slate 800 - High contrast
+      secondary: '#64748B', // Slate 500 - Medium contrast
+      disabled: '#94A3B8',  // Slate 400
+      white: '#FFFFFF',
+      inverse: '#FFFFFF',
     },
-    border: '#e0e0e0',
+    
+    border: '#E2E8F0',      // Slate 200
+    
+    // Legacy specific colors (kept for compatibility, mapped to new palette where possible)
     driver: {
-      primary: '#1976d2',
-      light: '#e3f2fd',
-      active: '#4caf50',
-      inactive: '#9e9e9e',
+      primary: '#2563EB',
+      light: '#EFF6FF',
+      active: '#10B981',
+      inactive: '#94A3B8',
       balance: {
-        positive: '#4caf50',
-        negative: '#f44336',
+        positive: '#10B981',
+        negative: '#EF4444',
       },
     },
     admin: {
-      primary: '#9c27b0',
-      light: '#f3e5f5',
+      primary: '#7C3AED', // Violet
+      light: '#F5F3FF',
     },
     status: {
-      pending: '#ff9800',
-      approved: '#4caf50',
-      rejected: '#f44336',
-      active: '#4caf50',
-      inactive: '#9e9e9e',
+      pending: '#F59E0B',
+      approved: '#10B981',
+      rejected: '#EF4444',
+      active: '#10B981',
+      inactive: '#94A3B8',
     },
   },
+  
   spacing: {
     xs: 4,
     sm: 8,
     md: 16,
     lg: 24,
     xl: 32,
+    xxl: 48,
   },
+  
   typography: {
-    h1: { fontSize: 32, fontWeight: 'bold' as const, lineHeight: 40 },
-    h2: { fontSize: 24, fontWeight: 'bold' as const, lineHeight: 32 },
+    h1: { fontSize: 32, fontWeight: '700' as const, lineHeight: 40, letterSpacing: -0.5 },
+    h2: { fontSize: 24, fontWeight: '700' as const, lineHeight: 32, letterSpacing: -0.3 },
     h3: { fontSize: 20, fontWeight: '600' as const, lineHeight: 28 },
-    body1: { fontSize: 16, fontWeight: 'normal' as const, lineHeight: 24 },
-    body2: { fontSize: 14, fontWeight: 'normal' as const, lineHeight: 20 },
-    caption: { fontSize: 12, fontWeight: 'normal' as const, lineHeight: 16 },
-    button: { fontSize: 16, fontWeight: '600' as const, lineHeight: 24 },
+    h4: { fontSize: 18, fontWeight: '600' as const, lineHeight: 26 },
+    body1: { fontSize: 16, fontWeight: '400' as const, lineHeight: 24 },
+    body2: { fontSize: 14, fontWeight: '400' as const, lineHeight: 20 },
+    caption: { fontSize: 12, fontWeight: '400' as const, lineHeight: 16 },
+    button: { fontSize: 16, fontWeight: '600' as const, lineHeight: 24, letterSpacing: 0.5 },
+    label: { fontSize: 14, fontWeight: '500' as const, lineHeight: 20 },
   },
+  
   borderRadius: {
-    sm: 4,
-    md: 8,
-    lg: 12,
+    sm: 6,
+    md: 12,
+    lg: 16,
+    xl: 24,
     full: 9999,
   },
+  
   shadows: {
     small: {
-      shadowColor: '#000',
+      shadowColor: '#64748B',
       shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.1,
+      shadowOpacity: 0.05,
       shadowRadius: 2,
       elevation: 2,
     },
     medium: {
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.15,
-      shadowRadius: 4,
+      shadowColor: '#64748B',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.1,
+      shadowRadius: 8,
       elevation: 4,
     },
+    large: {
+      shadowColor: '#64748B',
+      shadowOffset: { width: 0, height: 8 },
+      shadowOpacity: 0.15,
+      shadowRadius: 16,
+      elevation: 8,
+    },
   },
+  
+  // Layout helpers
+  layout: {
+    containerPadding: 20,
+  }
 };

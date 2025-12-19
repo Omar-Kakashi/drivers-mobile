@@ -3,7 +3,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator, Alert, Image } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { theme } from '../../theme';
@@ -11,6 +11,11 @@ import { useAuthStore } from '../../stores/authStore';
 import { backendAPI } from '../../api';
 import { Driver, Assignment, Balance } from '../../types';
 import { toastLoadError } from '../../utils/toastHelpers';
+import { Screen } from '../../components/Screen';
+import { Card } from '../../components/Card';
+import { Button } from '../../components/Button';
+import { Logo } from '../../components/Logo';
+import { resolveImageUrl } from '../../utils/urlHelper';
 
 const formatAmount = (amount: any): string => {
   if (amount === null || amount === undefined) return '0.00';
@@ -38,7 +43,16 @@ export default function DriverDashboardScreen() {
       const data = await backendAPI.getDriverDashboard(driver.id);
       console.log('✅ Dashboard data received:', JSON.stringify(data, null, 2));
       setCurrentAssignment(data.current_assignment);
-      setBalance(data.balance);
+
+      // Fetch Detailed Balance
+      try {
+        const detailedBalance = await backendAPI.getDriverBalance(driver.id);
+        setBalance(detailedBalance);
+      } catch (e) {
+        console.log('⚠️ Failed to load detailed balance, using summary', e);
+        setBalance(data.balance);
+      }
+
       setNotificationsCount(data.notifications_count);
     } catch (error: any) {
       console.error('❌ Dashboard load error:', error);
@@ -47,13 +61,6 @@ export default function DriverDashboardScreen() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handleLogout = () => {
-    Alert.alert('Logout', 'Are you sure you want to logout?', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Logout', onPress: logout, style: 'destructive' },
-    ]);
   };
 
   if (loading) {
@@ -65,127 +72,185 @@ export default function DriverDashboardScreen() {
   }
 
   return (
-    <ScrollView style={styles.container}>
-      {/* Header Card */}
-      <View style={styles.headerCard}>
-        <View>
-          <Text style={styles.greeting}>Hello, {driver.name}!</Text>
-          <Text style={styles.driverInfo}>Driver ID: {driver.driver_id}</Text>
-        </View>
-        <TouchableOpacity onPress={() => navigation.navigate('Notifications')} style={styles.notificationButton}>
-          <Ionicons name="notifications-outline" size={24} color={theme.colors.driver.primary} />
-          {notificationsCount > 0 && (
-            <View style={styles.badge}>
-              <Text style={styles.badgeText}>{notificationsCount}</Text>
+    <Screen style={styles.container} padding>
+      <ScrollView contentContainerStyle={styles.scrollContent}>
+        {/* Header Section */}
+        <View style={styles.header}>
+          <View style={styles.headerLeft}>
+            <Logo size={40} />
+            <View style={styles.headerText}>
+              <Text style={styles.greeting}>Hello, {driver.name.split(' ')[0]}</Text>
+              <Text style={styles.driverId}>ID: {driver.driver_id}</Text>
             </View>
-          )}
-        </TouchableOpacity>
-      </View>
-
-      {/* Current Assignment Card */}
-      {currentAssignment ? (
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <Ionicons name="car" size={24} color={theme.colors.primary} />
-            <Text style={styles.cardTitle}>Current Assignment</Text>
           </View>
-          <View style={styles.assignmentContainer}>
-            {currentAssignment.vehicle_image_url && (
-              <Image 
-                source={{ uri: currentAssignment.vehicle_image_url }}
+          <TouchableOpacity
+            style={styles.notificationButton}
+            onPress={() => navigation.navigate('Notifications')}
+          >
+            <Ionicons name="notifications-outline" size={24} color={theme.colors.text.primary} />
+            {notificationsCount > 0 && (
+              <View style={styles.badge}>
+                <Text style={styles.badgeText}>{notificationsCount}</Text>
+              </View>
+            )}
+          </TouchableOpacity>
+        </View>
+
+        {/* Current Assignment Card */}
+        <Text style={styles.sectionTitle}>Current Vehicle</Text>
+        {currentAssignment ? (
+          <Card variant="elevated" noPadding style={styles.vehicleCard}>
+            {resolveImageUrl(currentAssignment.vehicle_image_url) && (
+              <Image
+                source={{ uri: resolveImageUrl(currentAssignment.vehicle_image_url) }}
                 style={styles.vehicleImage}
               />
             )}
-            <View style={styles.assignmentDetails}>
-              <Text style={styles.licensePlate}>{currentAssignment.vehicle_license_plate}</Text>
+            <View style={styles.vehicleContent}>
+              <View style={styles.vehicleHeader}>
+                <Text style={styles.licensePlate}>{currentAssignment.vehicle_license_plate}</Text>
+                <View style={styles.statusBadge}>
+                  <Text style={styles.statusText}>{currentAssignment.status.toUpperCase()}</Text>
+                </View>
+              </View>
               {currentAssignment.make_model && (
                 <Text style={styles.makeModel}>{currentAssignment.make_model}</Text>
               )}
-              <Text style={styles.assignmentInfo}>
-                Since: {new Date(currentAssignment.assignment_date).toLocaleDateString()}
-              </Text>
-              <Text style={styles.assignmentInfo}>
-                Daily Rent: AED {currentAssignment.daily_rent.toFixed(2)}
-              </Text>
-              <Text style={styles.assignmentInfo}>
-                Status: <Text style={styles.statusActive}>{currentAssignment.status.toUpperCase()}</Text>
-              </Text>
-            </View>
-          </View>
-        </View>
-      ) : (
-        <View style={styles.card}>
-          <Text style={styles.noAssignment}>No active assignment</Text>
-        </View>
-      )}
 
-      {/* Balance Card */}
-      {balance && (
-        <View style={styles.card}>
-          <View style={styles.cardHeader}>
-            <Ionicons name="wallet" size={24} color={theme.colors.secondary} />
-            <Text style={styles.cardTitle}>Balance Summary</Text>
-          </View>
-          <View style={styles.balanceGrid}>
-            <View style={styles.balanceItem}>
-              <Text style={styles.balanceLabel}>Current Balance</Text>
-              <Text style={[
-                styles.balanceValue,
-                { color: parseFloat(balance.current_balance || '0') >= 0 ? theme.colors.success : theme.colors.error }
-              ]}>
-                AED {formatAmount(balance.current_balance)}
-              </Text>
-            </View>
-            <View style={styles.balanceItem}>
-              <Text style={styles.balanceLabel}>Total Rent Due</Text>
-              <Text style={styles.balanceValue}>AED {formatAmount(balance.total_rent)}</Text>
-            </View>
-            <View style={styles.balanceItem}>
-              <Text style={styles.balanceLabel}>Total Payments</Text>
-              <Text style={styles.balanceValue}>AED {formatAmount(balance.total_payments)}</Text>
-            </View>
-            <View style={styles.balanceItem}>
-              <Text style={styles.balanceLabel}>Total Credits</Text>
-              <Text style={styles.balanceValue}>AED {formatAmount(balance.total_credits)}</Text>
-            </View>
-          </View>
-        </View>
-      )}
+              <View style={styles.vehicleDetails}>
+                <View style={styles.detailItem}>
+                  <Ionicons name="calendar-outline" size={16} color={theme.colors.text.secondary} />
+                  <Text style={styles.detailText}>
+                    {new Date(currentAssignment.assignment_date).toLocaleDateString()}
+                  </Text>
+                </View>
+                <View style={styles.detailItem}>
+                  <Ionicons name="pricetag-outline" size={16} color={theme.colors.text.secondary} />
+                  <Text style={styles.detailText}>
+                    AED {currentAssignment.daily_rent.toFixed(2)} / day
+                  </Text>
+                </View>
+              </View>
 
-      {/* Quick Actions */}
-      <View style={styles.quickActions}>
-        <Text style={styles.sectionTitle}>Quick Actions</Text>
-        <TouchableOpacity 
-          style={styles.actionButton}
-          onPress={() => navigation.navigate('Leave Request')}
-        >
-          <Ionicons name="document-text" size={20} color={theme.colors.primary} />
-          <Text style={styles.actionText}>Request Leave</Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={styles.actionButton}
-          onPress={() => navigation.navigate('MyAssignments')}
-        >
-          <Ionicons name="time" size={20} color={theme.colors.primary} />
-          <Text style={styles.actionText}>View Assignment History</Text>
-        </TouchableOpacity>
-        {currentAssignment && (
-          <TouchableOpacity 
-            style={styles.actionButton}
-            onPress={() => navigation.navigate('VehicleDocuments')}
-          >
-            <Ionicons name="car-sport" size={20} color={theme.colors.primary} />
-            <Text style={styles.actionText}>View Vehicle Documents</Text>
-          </TouchableOpacity>
+              <Button
+                title="Vehicle Documents"
+                variant="outline"
+                size="small"
+                onPress={() => navigation.navigate('VehicleDocuments')}
+                style={styles.vehicleDocsButton}
+              />
+            </View>
+          </Card>
+        ) : (
+          <Card style={styles.emptyStateCard}>
+            <Ionicons name="car-outline" size={48} color={theme.colors.text.disabled} />
+            <Text style={styles.emptyStateText}>No active vehicle assignment</Text>
+          </Card>
         )}
-      </View>
-    </ScrollView>
+
+        {/* Balance Card */}
+        {balance && (
+          <>
+            <Text style={styles.sectionTitle}>Financials</Text>
+            <Card variant="elevated" style={styles.balanceCard}>
+              <View style={styles.balanceHeader}>
+                <Text style={styles.balanceLabel}>Current Balance</Text>
+                <Text style={[
+                  styles.balanceAmount,
+                  { color: (balance.current_balance || 0) >= 0 ? theme.colors.success : theme.colors.error }
+                ]}>
+                  AED {formatAmount(balance.current_balance)}
+                </Text>
+              </View>
+
+              <View style={styles.divider} />
+
+              <View style={styles.balanceGrid}>
+                <View style={styles.balanceItem}>
+                  <Text style={styles.balanceSubLabel}>Total Rent Due</Text>
+                  <Text style={styles.balanceSubValue}>AED {formatAmount(balance.total_rent_due)}</Text>
+                </View>
+                <View style={[styles.balanceItem, styles.balanceBorderLeft]}>
+                  <Text style={styles.balanceSubLabel}>Total Paid</Text>
+                  <Text style={styles.balanceSubValue}>AED {formatAmount(balance.total_payments)}</Text>
+                </View>
+              </View>
+
+              {/* Detailed Breakdown */}
+              {(balance.total_salik || balance.total_fines || balance.total_fuel) ? (
+                <>
+                  <View style={[styles.divider, { marginTop: theme.spacing.md }]} />
+                  <View style={styles.balanceGrid}>
+                    {balance.total_salik !== undefined && (
+                      <View style={styles.balanceItem}>
+                        <Text style={styles.balanceSubLabel}>Salik</Text>
+                        <Text style={styles.balanceSubValue}>AED {formatAmount(balance.total_salik)}</Text>
+                      </View>
+                    )}
+                    {balance.total_fines !== undefined && (
+                      <View style={[styles.balanceItem, styles.balanceBorderLeft]}>
+                        <Text style={styles.balanceSubLabel}>Fines</Text>
+                        <Text style={styles.balanceSubValue}>AED {formatAmount(balance.total_fines)}</Text>
+                      </View>
+                    )}
+                  </View>
+                </>
+              ) : null}
+            </Card>
+          </>
+        )}
+
+        {/* Quick Actions */}
+        <Text style={styles.sectionTitle}>Quick Actions</Text>
+        <View style={styles.actionsGrid}>
+          <TouchableOpacity
+            style={styles.actionItem}
+            onPress={() => navigation.navigate('Leave Request')}
+          >
+            <View style={[styles.actionIcon, { backgroundColor: theme.colors.primaryLight + '20' }]}>
+              <Ionicons name="calendar" size={24} color={theme.colors.primary} />
+            </View>
+            <Text style={styles.actionLabel}>Request Leave</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.actionItem}
+            onPress={() => navigation.navigate('Assignments')}
+          >
+            <View style={[styles.actionIcon, { backgroundColor: theme.colors.secondary + '20' }]}>
+              <Ionicons name="time" size={24} color={theme.colors.secondary} />
+            </View>
+            <Text style={styles.actionLabel}>Assignments</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.actionItem}
+            onPress={() => navigation.navigate('TrafficFines')}
+          >
+            <View style={[styles.actionIcon, { backgroundColor: '#EF4444' + '20' }]}>
+              <Ionicons name="alert-circle" size={24} color="#EF4444" />
+            </View>
+            <Text style={styles.actionLabel}>Traffic Fines</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={styles.actionItem}
+            onPress={() => navigation.navigate('AccidentReport')}
+          >
+            <View style={[styles.actionIcon, { backgroundColor: '#DC2626' + '20' }]}>
+              <Ionicons name="car-sport" size={24} color="#DC2626" />
+            </View>
+            <Text style={styles.actionLabel}>Report Accident</Text>
+          </TouchableOpacity>
+        </View>
+
+      </ScrollView>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     backgroundColor: theme.colors.background,
   },
   loadingContainer: {
@@ -193,138 +258,199 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  headerCard: {
+  scrollContent: {
+    paddingBottom: theme.spacing.xl,
+  },
+  header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: theme.colors.surface,
-    padding: theme.spacing.lg,
-    margin: theme.spacing.md,
-    borderRadius: theme.borderRadius.lg,
-    ...theme.shadows.medium,
+    marginBottom: theme.spacing.lg,
+    marginTop: theme.spacing.sm,
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.md,
+  },
+  headerText: {
+    justifyContent: 'center',
   },
   greeting: {
-    ...theme.typography.h3,
+    ...theme.typography.h2,
     color: theme.colors.text.primary,
   },
-  driverInfo: {
+  driverId: {
     ...theme.typography.body2,
     color: theme.colors.text.secondary,
-    marginTop: theme.spacing.xs,
-  },
-  logoutButton: {
-    padding: theme.spacing.sm,
   },
   notificationButton: {
-    padding: theme.spacing.sm,
-    position: 'relative',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: theme.colors.surface,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...theme.shadows.small,
   },
   badge: {
     position: 'absolute',
-    right: 4,
-    top: 4,
+    top: 0,
+    right: 0,
     backgroundColor: theme.colors.error,
-    borderRadius: 10,
-    width: 20,
-    height: 20,
+    borderRadius: 6,
+    minWidth: 16,
+    height: 16,
     justifyContent: 'center',
     alignItems: 'center',
+    paddingHorizontal: 2,
+    borderWidth: 1.5,
+    borderColor: theme.colors.surface,
   },
   badgeText: {
-    color: theme.colors.text.white,
-    fontSize: 10,
-    fontWeight: '600',
+    color: 'white',
+    fontSize: 9,
+    fontWeight: 'bold',
   },
-  card: {
-    backgroundColor: theme.colors.surface,
-    margin: theme.spacing.md,
-    marginTop: 0,
-    padding: theme.spacing.lg,
-    borderRadius: theme.borderRadius.lg,
-    ...theme.shadows.medium,
+  sectionTitle: {
+    ...theme.typography.h4,
+    color: theme.colors.text.primary,
+    marginBottom: theme.spacing.sm,
+    marginTop: theme.spacing.md,
   },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: theme.spacing.md,
-  },
-  cardTitle: {
-    ...theme.typography.h3,
-    marginLeft: theme.spacing.sm,
-  },
-  assignmentContainer: {
-    gap: theme.spacing.md,
+  vehicleCard: {
+    overflow: 'hidden',
   },
   vehicleImage: {
     width: '100%',
-    height: 200,
-    borderRadius: theme.borderRadius.md,
-    backgroundColor: theme.colors.background,
-    resizeMode: 'cover',
+    height: 180,
+    backgroundColor: theme.colors.border,
   },
-  assignmentDetails: {
-    gap: theme.spacing.sm,
+  vehicleContent: {
+    padding: theme.spacing.md,
+  },
+  vehicleHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
   },
   licensePlate: {
-    ...theme.typography.h2,
-    color: theme.colors.primary,
+    ...theme.typography.h3,
+    color: theme.colors.text.primary,
+  },
+  statusBadge: {
+    backgroundColor: theme.colors.success + '20',
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 4,
+  },
+  statusText: {
+    ...theme.typography.caption,
+    color: theme.colors.success,
+    fontWeight: '700',
   },
   makeModel: {
-    ...theme.typography.h4,
-    color: theme.colors.text.primary,
-    marginTop: -4,
+    ...theme.typography.body1,
+    color: theme.colors.text.secondary,
+    marginBottom: theme.spacing.md,
   },
-  assignmentInfo: {
+  vehicleDetails: {
+    flexDirection: 'row',
+    gap: theme.spacing.lg,
+    marginBottom: theme.spacing.md,
+  },
+  detailItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  detailText: {
+    ...theme.typography.caption,
+    color: theme.colors.text.secondary,
+  },
+  vehicleDocsButton: {
+    marginTop: theme.spacing.xs,
+  },
+  emptyStateCard: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: theme.spacing.xl,
+    gap: theme.spacing.sm,
+  },
+  emptyStateText: {
     ...theme.typography.body1,
     color: theme.colors.text.secondary,
   },
-  statusActive: {
-    color: theme.colors.success,
-    fontWeight: '600',
+  balanceCard: {
+    backgroundColor: theme.colors.primary, // Using primary color for balance card background
   },
-  noAssignment: {
-    ...theme.typography.body1,
-    color: theme.colors.text.secondary,
-    textAlign: 'center',
-    paddingVertical: theme.spacing.lg,
+  balanceHeader: {
+    alignItems: 'center',
+    marginBottom: theme.spacing.md,
+  },
+  balanceLabel: {
+    ...theme.typography.body2,
+    color: theme.colors.text.white,
+    opacity: 0.9,
+    marginBottom: 4,
+  },
+  balanceAmount: {
+    ...theme.typography.h1,
+    color: theme.colors.text.white,
+    fontSize: 36,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: theme.colors.text.white,
+    opacity: 0.2,
+    marginBottom: theme.spacing.md,
   },
   balanceGrid: {
+    flexDirection: 'row',
+  },
+  balanceItem: {
+    flex: 1,
+    alignItems: 'center',
+  },
+  balanceBorderLeft: {
+    borderLeftWidth: 1,
+    borderLeftColor: 'rgba(255,255,255,0.2)',
+  },
+  balanceSubLabel: {
+    ...theme.typography.caption,
+    color: theme.colors.text.white,
+    opacity: 0.8,
+    marginBottom: 2,
+  },
+  balanceSubValue: {
+    ...theme.typography.h4,
+    color: theme.colors.text.white,
+  },
+  actionsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: theme.spacing.md,
   },
-  balanceItem: {
-    flex: 1,
-    minWidth: '45%',
-  },
-  balanceLabel: {
-    ...theme.typography.caption,
-    color: theme.colors.text.secondary,
-    marginBottom: theme.spacing.xs,
-  },
-  balanceValue: {
-    ...theme.typography.h3,
-    color: theme.colors.text.primary,
-  },
-  quickActions: {
-    padding: theme.spacing.md,
-    gap: theme.spacing.sm,
-  },
-  sectionTitle: {
-    ...theme.typography.h3,
-    marginBottom: theme.spacing.sm,
-  },
-  actionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  actionItem: {
+    width: '47%',
     backgroundColor: theme.colors.surface,
     padding: theme.spacing.md,
-    borderRadius: theme.borderRadius.md,
-    gap: theme.spacing.sm,
+    borderRadius: theme.borderRadius.lg,
+    alignItems: 'center',
     ...theme.shadows.small,
   },
-  actionText: {
-    ...theme.typography.body1,
+  actionIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: theme.spacing.sm,
+  },
+  actionLabel: {
+    ...theme.typography.body2,
     color: theme.colors.text.primary,
+    fontWeight: '500',
   },
 });

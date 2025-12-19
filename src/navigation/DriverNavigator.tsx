@@ -25,16 +25,27 @@ import ProfileScreen from '../screens/driver/ProfileScreen';
 import LeaveReturnScreen from '../screens/driver/LeaveReturnScreen';
 import PassportHandoverScreen from '../screens/driver/PassportHandoverScreen';
 import MyRequestsScreen from '../screens/driver/MyRequestsScreen';
+import ShareAdjustmentRequestScreen from '../screens/driver/ShareAdjustmentRequestScreen';
+import NOCRequestScreen from '../screens/driver/NOCRequestScreen';
+import SalaryCertificateScreen from '../screens/driver/SalaryCertificateScreen';
+import LoanCertificateScreen from '../screens/driver/LoanCertificateScreen';
+import ExitPermitScreen from '../screens/driver/ExitPermitScreen';
+import AccidentReportScreen from '../screens/driver/AccidentReportScreen';
+import AccidentReportHistoryScreen from '../screens/driver/AccidentReportHistoryScreen';
+import TrafficFinesScreen from '../screens/driver/TrafficFinesScreen';
+
+import { createStackNavigator } from '@react-navigation/stack';
 
 const Tab = createBottomTabNavigator();
+const Stack = createStackNavigator();
 
-export default function DriverNavigator() {
+function DriverTabs() {
   const { unreadCount } = useUnreadNotificationCount();
   const insets = useSafeAreaInsets();
-  
+
   return (
+    // @ts-ignore
     <Tab.Navigator
-      sceneContainerStyle={{ backgroundColor: 'transparent' }}
       screenOptions={({ navigation }) => ({
         tabBarActiveTintColor: theme.colors.driver.primary,
         tabBarInactiveTintColor: theme.colors.text.secondary,
@@ -46,9 +57,6 @@ export default function DriverNavigator() {
         tabBarLabelStyle: {
           fontSize: 11,
           paddingBottom: Platform.OS === 'android' ? 4 : 0,
-        },
-        tabBarItemStyle: {
-          flex: 1,
         },
         headerShown: true,
         headerStyle: { backgroundColor: theme.colors.driver.primary },
@@ -114,73 +122,107 @@ export default function DriverNavigator() {
           title: 'HR Services',
         }}
       />
-      
-      {/* Hidden Screens - Accessible via navigation but not in bottom tabs */}
-      <Tab.Screen
+    </Tab.Navigator>
+  );
+}
+
+export default function DriverNavigator() {
+  return (
+    // @ts-ignore
+    <Stack.Navigator
+      screenOptions={{
+        headerStyle: { backgroundColor: theme.colors.driver.primary },
+        headerTintColor: theme.colors.text.white,
+      }}
+    >
+      <Stack.Screen
+        name="DriverTabs"
+        component={DriverTabs}
+        options={{ headerShown: false }}
+      />
+
+      {/* Detail Screens */}
+      <Stack.Screen
         name="Leave Request"
         component={DriverHRScreen}
-        options={{
-          tabBarButton: () => null,
-          title: 'Request Leave',
-        }}
+        options={{ title: 'Request Leave' }}
       />
-      <Tab.Screen
+      <Stack.Screen
         name="LeaveReturn"
         component={LeaveReturnScreen}
-        options={{
-          tabBarButton: () => null,
-          title: 'Announce Return from Leave',
-        }}
+        options={{ title: 'Return from Leave' }}
       />
-      <Tab.Screen
+      <Stack.Screen
         name="My Requests"
         component={MyRequestsScreen}
-        options={{
-          tabBarButton: () => null,
-          title: 'My Requests',
-        }}
+        options={{ title: 'My Requests' }}
       />
-      <Tab.Screen
+      <Stack.Screen
         name="PassportHandover"
         component={PassportHandoverScreen}
-        options={{
-          tabBarButton: () => null,
-          title: 'Passport Handover',
-        }}
+        options={{ title: 'Passport Handover' }}
       />
-      <Tab.Screen
+      <Stack.Screen
         name="Profile"
         component={ProfileScreen}
-        options={{
-          tabBarButton: () => null,
-          title: 'Profile',
-        }}
+        options={{ title: 'My Profile' }}
       />
-      <Tab.Screen
+      <Stack.Screen
         name="Notifications"
         component={NotificationsScreen}
-        options={{
-          tabBarButton: () => null,
-          title: 'Notifications',
-        }}
+        options={{ title: 'Notifications' }}
       />
-      <Tab.Screen
+      <Stack.Screen
         name="VehicleDocuments"
         component={VehicleDocumentsScreen}
-        options={{
-          tabBarButton: () => null,
-          title: 'Vehicle Documents',
-        }}
+        options={{ title: 'Vehicle Documents' }}
       />
-      <Tab.Screen
+      <Stack.Screen
         name="Settlements"
         component={DriverTransactionHistoryScreen}
-        options={{
-          tabBarButton: () => null,
-          title: 'Transaction History',
-        }}
+        options={{ title: 'Transaction History' }}
       />
-    </Tab.Navigator>
+      <Stack.Screen
+        name="ShareAdjustmentRequest"
+        component={ShareAdjustmentRequestScreen}
+        options={{ title: 'Request Adjustment' }}
+      />
+      <Stack.Screen
+        name="NOCRequest"
+        component={NOCRequestScreen}
+        options={{ title: 'NOC Request' }}
+      />
+      <Stack.Screen
+        name="SalaryCertificate"
+        component={SalaryCertificateScreen}
+        options={{ title: 'Salary Certificate' }}
+      />
+      <Stack.Screen
+        name="LoanCertificate"
+        component={LoanCertificateScreen}
+        options={{ title: 'Salary Advance' }}
+      />
+      <Stack.Screen
+        name="ExitPermit"
+        component={ExitPermitScreen}
+        options={{ title: 'Exit Permit' }}
+      />
+      <Stack.Screen
+        name="AccidentReport"
+        component={AccidentReportScreen}
+        options={{ title: 'Accident Report' }}
+      />
+      <Stack.Screen
+        name="AccidentReportHistory"
+        component={AccidentReportHistoryScreen}
+        options={{ title: 'Accident Report History' }}
+      />
+      <Stack.Screen
+        name="TrafficFines"
+        component={TrafficFinesScreen}
+        options={{ title: 'Traffic Fines' }}
+      />
+    </Stack.Navigator>
   );
 }
 

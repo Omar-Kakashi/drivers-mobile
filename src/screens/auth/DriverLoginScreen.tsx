@@ -1,13 +1,13 @@
-/**
- * Driver Login Screen - Login with driver_id OR phone
- */
-
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ActivityIndicator, KeyboardAvoidingView, ScrollView, Platform } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { View, Text, StyleSheet, KeyboardAvoidingView, ScrollView, Platform, TouchableOpacity } from 'react-native';
 import { theme } from '../../theme';
 import { useAuthStore } from '../../stores/authStore';
 import { toastValidationError, toastError } from '../../utils/toastHelpers';
+import { Screen } from '../../components/Screen';
+import { Input } from '../../components/Input';
+import { Button } from '../../components/Button';
+import { Logo } from '../../components/Logo';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function DriverLoginScreen({ navigation }: any) {
   const [identifier, setIdentifier] = useState('');
@@ -17,6 +17,7 @@ export default function DriverLoginScreen({ navigation }: any) {
   const login = useAuthStore((state) => state.login);
 
   const handleLogin = async () => {
+    // ... logic remains same ...
     if (!identifier.trim() || !password.trim()) {
       toastValidationError('driver ID/phone and password');
       return;
@@ -56,101 +57,98 @@ export default function DriverLoginScreen({ navigation }: any) {
   };
 
   return (
-    <KeyboardAvoidingView 
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={0}
-    >
-      <ScrollView 
-        contentContainerStyle={styles.scrollContent}
-        keyboardShouldPersistTaps="handled"
+    <Screen style={styles.container}>
+      <KeyboardAvoidingView
+        style={styles.keyboardView}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        keyboardVerticalOffset={0}
       >
-        <View style={styles.header}>
-          <Text style={styles.title}>Driver Login</Text>
-          <Text style={styles.subtitle}>Enter your credentials</Text>
-        </View>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.header}>
+            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backIcon}>
+              <Ionicons name="arrow-back" size={24} color={theme.colors.text.primary} />
+            </TouchableOpacity>
 
-      <View style={styles.form}>
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Driver ID or Phone Number</Text>
-          <TextInput
-            style={styles.input}
-            placeholder="Enter driver ID or phone"
-            placeholderTextColor={theme.colors.text.secondary}
-            value={identifier}
-            onChangeText={setIdentifier}
-            autoCapitalize="none"
-            autoCorrect={false}
-          />
-        </View>
+            <Logo size={60} style={styles.logo} />
+            <Text style={styles.title}>Welcome Back</Text>
+            <Text style={styles.subtitle}>Log in to access your driver dashboard</Text>
+          </View>
 
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Password</Text>
-          <View style={styles.passwordContainer}>
-            <TextInput
-              style={styles.passwordInput}
-              placeholder="Enter password"
-              placeholderTextColor={theme.colors.text.secondary}
+          <View style={styles.form}>
+            <Input
+              label="Driver ID or Phone Number"
+              placeholder="e.g. 501234567"
+              value={identifier}
+              onChangeText={setIdentifier}
+              autoCapitalize="none"
+              autoCorrect={false}
+              leftIcon="person-outline"
+            />
+
+            <Input
+              label="Password"
+              placeholder="Enter your password"
               value={password}
               onChangeText={setPassword}
               secureTextEntry={!showPassword}
+              leftIcon="lock-closed-outline"
+              rightIcon={showPassword ? 'eye-off-outline' : 'eye-outline'}
+              onRightIconPress={() => setShowPassword(!showPassword)}
             />
-            <TouchableOpacity 
-              style={styles.eyeButton}
-              onPress={() => setShowPassword(!showPassword)}
-            >
-              <Ionicons 
-                name={showPassword ? 'eye-off' : 'eye'} 
-                size={24} 
-                color={theme.colors.text.secondary} 
-              />
-            </TouchableOpacity>
+
+            <Button
+              title="Login"
+              onPress={handleLogin}
+              isLoading={loading}
+              style={styles.loginButton}
+              fullWidth
+            />
+
+            <Text style={styles.hint}>
+              Default password: 123456789{'\n'}
+              You will be asked to change it on first login
+            </Text>
           </View>
-        </View>
-
-        <TouchableOpacity
-          style={[styles.button, loading && styles.buttonDisabled]}
-          onPress={handleLogin}
-          disabled={loading}
-        >
-          {loading ? (
-            <ActivityIndicator color={theme.colors.text.white} />
-          ) : (
-            <Text style={styles.buttonText}>Login</Text>
-          )}
-        </TouchableOpacity>
-
-        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Text style={styles.backButtonText}>← Back to login options</Text>
-        </TouchableOpacity>
-      </View>
-
-        <Text style={styles.hint}>
-          Default password: 123456789{'\n'}
-          You will be asked to change it on first login
-        </Text>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </Screen>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
     backgroundColor: theme.colors.background,
+  },
+  keyboardView: {
+    flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
-    padding: theme.spacing.xl,
-    justifyContent: 'center',
+    padding: theme.layout.containerPadding,
   },
   header: {
+    marginBottom: theme.spacing.xl,
+    marginTop: theme.spacing.lg,
     alignItems: 'center',
-    marginBottom: theme.spacing.xl * 2,
+  },
+  logo: {
+    marginBottom: theme.spacing.md,
+  },
+  backIcon: {
+    marginBottom: theme.spacing.lg,
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+    alignSelf: 'flex-start',
+    marginLeft: -12,
   },
   title: {
-    ...theme.typography.h2,
-    color: theme.colors.primary,
+    ...theme.typography.h1,
+    color: theme.colors.text.primary,
     marginBottom: theme.spacing.sm,
   },
   subtitle: {
@@ -158,69 +156,16 @@ const styles = StyleSheet.create({
     color: theme.colors.text.secondary,
   },
   form: {
-    gap: theme.spacing.lg,
-  },
-  inputGroup: {
-    gap: theme.spacing.sm,
-  },
-  label: {
-    ...theme.typography.body1,
-    color: theme.colors.text.primary,
-    fontWeight: '600',
-  },
-  input: {
-    ...theme.typography.body1,
-    backgroundColor: theme.colors.surface,
-    padding: theme.spacing.md,
-    borderRadius: theme.borderRadius.md,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-    color: theme.colors.text.primary,
-  },
-  passwordContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: theme.colors.surface,
-    borderRadius: theme.borderRadius.md,
-    borderWidth: 1,
-    borderColor: theme.colors.border,
-  },
-  passwordInput: {
-    ...theme.typography.body1,
-    flex: 1,
-    padding: theme.spacing.md,
-    color: theme.colors.text.primary,
-  },
-  eyeButton: {
-    padding: theme.spacing.md,
-  },
-  button: {
-    backgroundColor: theme.colors.primary,
-    padding: theme.spacing.md,
-    borderRadius: theme.borderRadius.md,
-    alignItems: 'center',
     marginTop: theme.spacing.md,
-    ...theme.shadows.medium,
   },
-  buttonDisabled: {
-    opacity: 0.6,
-  },
-  buttonText: {
-    ...theme.typography.button,
-    color: theme.colors.text.white,
-  },
-  backButton: {
-    padding: theme.spacing.sm,
-    alignItems: 'center',
-  },
-  backButtonText: {
-    ...theme.typography.body2,
-    color: theme.colors.primary,
+  loginButton: {
+    marginTop: theme.spacing.lg,
   },
   hint: {
     ...theme.typography.caption,
-    color: theme.colors.text.secondary,
+    color: theme.colors.text.disabled,
     textAlign: 'center',
     marginTop: theme.spacing.xl,
+    lineHeight: 20,
   },
 });

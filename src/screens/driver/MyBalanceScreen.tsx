@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, ScrollView, ActivityIndicator, RefreshControl, TouchableOpacity } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { theme } from '../../theme';
 import { useAuthStore } from '../../stores/authStore';
@@ -147,6 +147,21 @@ export default function MyBalanceScreen() {
       <View style={styles.infoCard}>
         <Text style={styles.infoText}>💡 Balance is calculated in real-time from your transaction history. Tap "View History" to see detailed breakdown.</Text>
       </View>
+
+      {/* Request Adjustment Button */}
+      <TouchableOpacity
+        style={styles.adjustmentButton}
+        onPress={() => navigation.navigate('ShareAdjustmentRequest')}
+      >
+        <MaterialCommunityIcons name="file-document-edit" size={24} color={theme.colors.white} />
+        <View style={styles.adjustmentButtonContent}>
+          <Text style={styles.adjustmentButtonTitle}>Request Share Adjustment</Text>
+          <Text style={styles.adjustmentButtonSubtitle}>For workshop days, accidents, etc.</Text>
+        </View>
+        <Ionicons name="chevron-forward" size={24} color={theme.colors.white} />
+      </TouchableOpacity>
+
+      <View style={{ height: 20 }} />
     </ScrollView>
   );
 }
@@ -241,5 +256,30 @@ const styles = StyleSheet.create({
     color: theme.colors.text.secondary,
     textAlign: 'center',
     lineHeight: 20,
+  },
+  adjustmentButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.driver.primary,
+    marginHorizontal: theme.spacing.md,
+    marginBottom: theme.spacing.md,
+    padding: theme.spacing.lg,
+    borderRadius: 12,
+    ...theme.shadows.md,
+  },
+  adjustmentButtonContent: {
+    flex: 1,
+    marginLeft: theme.spacing.md,
+  },
+  adjustmentButtonTitle: {
+    ...theme.typography.h4,
+    color: theme.colors.white,
+    fontWeight: '600',
+  },
+  adjustmentButtonSubtitle: {
+    ...theme.typography.caption,
+    color: theme.colors.white,
+    opacity: 0.8,
+    marginTop: 2,
   },
 });

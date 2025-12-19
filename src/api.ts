@@ -26,7 +26,7 @@ const PROD_BASE_URL = 'http://100.99.182.57:5000'; // Tailscale IP for testing
 const __DEV__ = typeof __DEV__ !== 'undefined' ? __DEV__ : false;
 
 // API Version - increment this to force cache clear on breaking changes
-const API_VERSION = '6'; // Tailscale enabled - works on any network!
+const API_VERSION = '9'; // Fixed push helper, removed all production URLs
 
 // Auto-detect working backend URL (cached in AsyncStorage)
 let detectedUrl: string | null = null;
@@ -38,34 +38,32 @@ let detectedUrl: string | null = null;
 function generatePossibleUrls(): string[] {
   const urls: string[] = [];
   
-  // Priority order: Tailscale → WiFi → USB
-  const ranges = [];
+  // Priority order: Tailscale (nginx) → Tailscale (direct) → Local → WiFi
   
-  // 1. Tailscale (works ANYWHERE - WiFi, cellular, any network) - HIGHEST PRIORITY
-  urls.push('http://100.99.182.57:5000'); // Tailscale laptop (kakashi)
+  // 1. Tailscale nginx (works ANYWHERE via nginx reverse proxy)
+  urls.push('http://100.99.182.57/api'); // Tailscale laptop via nginx port 80
   
-  // 2. Direct WiFi IP (fastest when on same network)
-  urls.push('http://192.168.0.111:5000'); // Laptop WiFi IP
+  // 2. Tailscale direct to backend (fallback if nginx not running)
+  urls.push('http://100.99.182.57:5000'); // Tailscale laptop direct to backend
   
-  // 3. USB debugging (adb reverse tcp:5000 tcp:5000)
-  urls.push('http://localhost:5000');
-  urls.push('http://10.0.2.2:5000'); // Android emulator host access
+  // 3. Local nginx (for emulator/localhost testing)
+  urls.push('http://10.0.2.2/api'); // Android emulator → host nginx
+  urls.push('http://localhost/api'); // Local nginx
+  
+  // 4. Direct backend (no nginx)
+  urls.push('http://192.168.0.111:5000'); // Laptop WiFi IP direct
+  urls.push('http://localhost:5000'); // Local backend direct
+  urls.push('http://10.0.2.2:5000'); // Android emulator direct
   
   // Then WiFi/Hotspot ranges (fallback when not on USB)
   const wifiRanges = [
-    { base: '10.166.21', start: 110, end: 115 },  // Work/Office networks (10.166.21.x - YOUR LAPTOP!)
+    { base: '192.168.0', start: 1, end: 20 },     // Home WiFi (limited range for speed)
+    { base: '192.168.1', start: 1, end: 20 },     // Home WiFi alternative
     { base: '172.20.10', start: 1, end: 10 },     // iPhone Mobile Hotspot
     { base: '192.168.43', start: 1, end: 10 },    // Android Mobile Hotspot
-    { base: '192.168.137', start: 1, end: 10 },   // Windows Mobile Hotspot
-    { base: '192.168.0', start: 1, end: 255 },    // Home WiFi (Class C)
-    { base: '192.168.1', start: 1, end: 255 },    // Home WiFi alternative
-    { base: '10.0.0', start: 1, end: 255 },       // Work/Office networks (10.0.0.x)
-    { base: '10.0.1', start: 1, end: 255 },       // Work/Office networks (10.0.1.x)
-    { base: '10.166.20', start: 1, end: 255 },    // Work/Office networks (10.166.20.x)
-    { base: '10.166.21', start: 1, end: 255 },    // Work/Office networks (full range)
   ];
   
-  // Generate URLs for WiFi ranges (after USB/localhost)
+  // Generate URLs for WiFi ranges
   for (const range of wifiRanges) {
     for (let i = range.start; i <= range.end; i++) {
       urls.push(`http://${range.base}.${i}:5000`);
@@ -187,8 +185,8 @@ class BackendAPI {
     // Request interceptor - Add JWT token & ensure correct baseURL
     this.client.interceptors.request.use(
       async (config) => {
-        // Ensure baseURL is set (for first request)
-        if (__DEV__ && !this.baseUrlInitialized) {
+        // ALWAYS ensure baseURL is set before making any request
+        if (!this.baseUrlInitialized) {
           await this.initializeBackendUrl();
         }
         
@@ -208,12 +206,11 @@ class BackendAPI {
         if (error.response?.status === 401) {
           // Token expired or invalid - clear storage
           await AsyncStorage.multiRemove(['authToken', 'user', 'userType']);
-        } else if (error.message === 'Network Error' && __DEV__) {
-          // Network error in development - cached URL might be wrong
-          console.log('⚠️  Network error detected - clearing cached backend URL');
+        } else if (error.message === 'Network Error') {
+          // Network error - cached URL might be wrong, reset for next attempt
+          console.log('⚠️  Network error detected - will re-detect backend on next request');
+          this.baseUrlInitialized = false;
           await resetBackendDetection();
-          // Don't retry automatically here to avoid infinite loops
-          // Next API call will re-detect
         }
         return Promise.reject(error);
       }
@@ -360,10 +357,25 @@ class BackendAPI {
     return data;
   }
 
-  async getDriverBalance(driverId: string): Promise<Balance> {
-    // ✅ FIXED: Use /balance/detailed endpoint (matches web app)
-    const { data } = await this.client.get(`/drivers/${driverId}/balance/detailed`);
-    return data;
+  async getDriverBalance(driverId: string): Promise<any> {
+    // Backend routes driver balance under /driver-balance prefix
+    const { data } = await this.client.get(`/driver-balance/${driverId}/balance/detailed`);
+    
+    // Return both raw backend fields AND mapped fields for compatibility
+    // Dashboard uses: total_rent_due, total_payments, total_credits
+    // MyBalanceScreen uses: total_uber_income, total_rent_charged, total_traffic_fines, etc.
+    return {
+      // Raw backend fields (for MyBalanceScreen)
+      ...data,
+      
+      // Mapped fields (for Dashboard)
+      current_balance: data.current_balance || 0,
+      total_rent_due: data.total_rent_charged || 0,
+      total_payments: data.total_payments_received || 0,
+      total_credits: data.total_uber_income || 0,
+      total_salik: data.total_salik || 0,
+      total_fines: (data.total_traffic_fines || 0) + (data.total_internal_fines || 0),
+    };
   }
 
   async getDriverTransactions(
@@ -378,8 +390,101 @@ class BackendAPI {
     if (year) params.year = year;
     if (transactionType) params.transaction_type = transactionType;
     
-    const { data } = await this.client.get(`/drivers/${driverId}/transactions`, { params });
+    const { data } = await this.client.get(`/driver-balance/${driverId}/transactions`, { params });
     return data; // Returns { transactions, total_count, opening_balance, total_income, total_expenses, net_change, current_balance }
+  }
+
+  async getDriverAssignments(driverId: string): Promise<any[]> {
+    // Backend uses primary_driver_id, not driver_id
+    const { data } = await this.client.get(`/assignments/`, { params: { primary_driver_id: driverId } });
+    return data;
+  }
+
+  // ==================== RENT DISCOUNTS (Share Adjustments) ====================
+
+  async getDriverRentDiscounts(driverId: string): Promise<any[]> {
+    const { data } = await this.client.get('/rent-discounts/', { 
+      params: { driver_id: driverId } 
+    });
+    return data;
+  }
+
+  async requestRentDiscount(request: {
+    driver_id: string;
+    vehicle_id: string;
+    discount_type: string;
+    discount_date: string;
+    discount_days: number;
+    daily_rate: number;
+    reason: string;
+    notes?: string;
+    job_card_picture_url?: string;
+    requested_by?: string;
+  }): Promise<any> {
+    const { data } = await this.client.post('/rent-discounts/request', request);
+    return data;
+  }
+
+  async uploadDriverDocument(
+    driverId: string,
+    documentType: string,
+    fileUri: string
+  ): Promise<string> {
+    const formData = new FormData();
+    
+    // Get file extension and mime type
+    const fileExtension = fileUri.split('.').pop()?.toLowerCase() || 'jpg';
+    const mimeType = fileExtension === 'pdf' ? 'application/pdf' : `image/${fileExtension}`;
+    
+    formData.append('file', {
+      uri: fileUri,
+      type: mimeType,
+      name: `document.${fileExtension}`,
+    } as any);
+    formData.append('driver_id', driverId);
+    formData.append('document_type', documentType);
+
+    const { data } = await this.client.post('/documents/upload/driver-document', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    
+    return data.file_url;
+  }
+
+  // ==================== TRAFFIC FINES (Actual RTA/Police fines) ====================
+
+  async getDriverTrafficFines(driverId: string): Promise<any> {
+    // Traffic fines from CSV imports (RTA/Police violations)
+    const { data } = await this.client.get(`/driver-balance/${driverId}/traffic-fines`);
+    return data; // Returns { driver_id, total_count, total_amount, fines: [] }
+  }
+
+  // ==================== INTERNAL FINES (Company-imposed fines) ====================
+
+  async getDriverInternalFines(driverId: string): Promise<any[]> {
+    const { data } = await this.client.get('/internal-fines', { 
+      params: { driver_id: driverId } 
+    });
+    return data.fines || [];
+  }
+
+  // ==================== HR REQUESTS ====================
+
+  async getHRRequests(userId: string, requestType?: string): Promise<any[]> {
+    const { data } = await this.client.get('/hr-requests/', { 
+      params: { user_id: userId, request_type: requestType } 
+    });
+    return data;
+  }
+
+  async createHRRequest(request: {
+    request_type: string;
+    user_id: string;
+    user_type: string;
+    data: Record<string, any>;
+  }): Promise<any> {
+    const { data } = await this.client.post('/hr-requests/', request);
+    return data;
   }
 
   // ==================== SETTLEMENTS ====================

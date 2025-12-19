@@ -4,7 +4,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { View, Text, ScrollView, StyleSheet, TouchableOpacity, TextInput, Alert, Modal, Image, ActivityIndicator } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { theme } from '../../theme';
 import { useAuthStore } from '../../stores/authStore';
@@ -190,6 +190,15 @@ export default function ProfileScreen() {
       {/* Settings */}
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Settings</Text>
+        
+        <TouchableOpacity
+          style={styles.settingButton}
+          onPress={() => navigation.navigate('AccidentReportHistory')}
+        >
+          <MaterialCommunityIcons name="car-emergency" size={24} color="#DC2626" />
+          <Text style={styles.settingText}>Accident Report History</Text>
+          <Ionicons name="chevron-forward" size={20} color={theme.colors.text.secondary} />
+        </TouchableOpacity>
         
         <TouchableOpacity
           style={styles.settingButton}

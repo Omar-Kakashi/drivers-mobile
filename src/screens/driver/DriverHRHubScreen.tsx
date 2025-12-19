@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, ScrollView, TouchableOpacity, StyleSheet } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { theme } from '../../theme';
 
@@ -13,6 +13,7 @@ export default function DriverHRHubScreen() {
       title: 'Request Leave',
       description: 'Submit a new leave request',
       icon: 'calendar-outline' as const,
+      iconFamily: 'ionicons',
       color: theme.colors.driver.primary,
       screen: 'Leave Request',
     },
@@ -21,6 +22,7 @@ export default function DriverHRHubScreen() {
       title: 'My Requests',
       description: 'View all your HR requests',
       icon: 'list' as const,
+      iconFamily: 'ionicons',
       color: '#3B82F6',
       screen: 'My Requests',
     },
@@ -29,6 +31,7 @@ export default function DriverHRHubScreen() {
       title: 'Announce Return from Leave',
       description: 'Notify management of your return to work',
       icon: 'arrow-back-circle' as const,
+      iconFamily: 'ionicons',
       color: theme.colors.success,
       screen: 'LeaveReturn',
     },
@@ -37,10 +40,63 @@ export default function DriverHRHubScreen() {
       title: 'Passport Handover',
       description: 'Submit passport for official procedures',
       icon: 'document-lock' as const,
+      iconFamily: 'ionicons',
       color: theme.colors.warning,
       screen: 'PassportHandover',
     },
+    {
+      id: 'noc-request',
+      title: 'NOC Request',
+      description: 'No Objection Certificate for other work',
+      icon: 'file-certificate' as const,
+      iconFamily: 'material-community',
+      color: '#6366F1',
+      screen: 'NOCRequest',
+    },
+    {
+      id: 'salary-certificate',
+      title: 'Salary Certificate',
+      description: 'For banks, embassies, visa applications',
+      icon: 'document-text-outline' as const,
+      iconFamily: 'ionicons',
+      color: '#F59E0B',
+      screen: 'SalaryCertificate',
+    },
+    {
+      id: 'loan-certificate',
+      title: 'Salary Advance',
+      description: 'Request a salary advance',
+      icon: 'cash-outline' as const,
+      iconFamily: 'ionicons',
+      color: '#EF4444',
+      screen: 'LoanCertificate',
+    },
+    {
+      id: 'exit-permit',
+      title: 'Exit Permit',
+      description: 'إذن خروج - Request to leave early',
+      icon: 'time-outline' as const,
+      iconFamily: 'ionicons',
+      color: '#EC4899',
+      screen: 'ExitPermit',
+    },
+    {
+      id: 'accident-report',
+      title: 'Accident Report',
+      description: 'Submit accident documentation for insurance',
+      icon: 'car-emergency' as const,
+      iconFamily: 'material-community',
+      color: '#DC2626',
+      screen: 'AccidentReport',
+    },
   ];
+
+  const renderIcon = (option: typeof hrOptions[0]) => {
+    if (option.iconFamily === 'material-community') {
+      return <MaterialCommunityIcons name={option.icon as any} size={36} color={option.color} />;
+    }
+    return <Ionicons name={option.icon as any} size={36} color={option.color} />;
+  };
 
   return (
     <ScrollView style={styles.container}>
@@ -58,7 +114,7 @@ export default function DriverHRHubScreen() {
             onPress={() => navigation.navigate(option.screen)}
           >
             <View style={[styles.iconContainer, { backgroundColor: option.color + '20' }]}>
-              <Ionicons name={option.icon} size={36} color={option.color} />
+              {renderIcon(option)}
             </View>
             <View style={styles.cardContent}>
               <Text style={styles.cardTitle}>{option.title}</Text>
