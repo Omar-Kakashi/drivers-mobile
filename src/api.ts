@@ -19,7 +19,7 @@ import {
   AuthResponse,
 } from './types';
 
-// Production backend URL - AWS Lightsail (Static IP)
+// Production backend URL - AWS Lightsail (Static IP) via nginx
 const PROD_BASE_URL = 'http://13.205.49.11/api';
 
 // Environment switcher - __DEV__ is a global set by React Native
@@ -41,7 +41,7 @@ function generatePossibleUrls(): string[] {
   
   // Priority order: Production (AWS Static IP) → Tailscale → Local
   
-  // 1. Production - AWS Lightsail Static IP (always first!)
+  // 1. Production - AWS Lightsail Static IP (always first!) via nginx
   urls.push('http://13.205.49.11/api');
   
   // 2. Tailscale nginx (works ANYWHERE via nginx reverse proxy)
