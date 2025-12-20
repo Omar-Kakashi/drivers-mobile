@@ -203,13 +203,16 @@ class BackendAPI {
           config.headers.Authorization = `Bearer ${token}`;
         }
         
-        // GLOBAL FIX: Ensure trailing slash on API paths for nginx compatibility
+        // GLOBAL FIX: Ensure trailing slash on GET requests for nginx compatibility
         // This fixes the issue where nginx routes /api/endpoint to web app instead of backend
+        // IMPORTANT: Only add trailing slash for GET requests - POST/PUT/DELETE break with trailing slash
         // Only add trailing slash if:
-        // 1. URL doesn't already end with /
-        // 2. URL doesn't have a file extension (like .json)
-        // 3. URL path exists
-        if (config.url && !config.url.endsWith('/') && !config.url.includes('.')) {
+        // 1. Method is GET
+        // 2. URL doesn't already end with /
+        // 3. URL doesn't have a file extension (like .json)
+        // 4. URL path exists
+        const method = (config.method || 'get').toLowerCase();
+        if (method === 'get' && config.url && !config.url.endsWith('/') && !config.url.includes('.')) {
           // Don't add trailing slash to URLs with path parameters at the end (like /users/123)
           // These work fine without trailing slash
           const lastSegment = config.url.split('/').pop() || '';
