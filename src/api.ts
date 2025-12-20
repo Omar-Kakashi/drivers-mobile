@@ -225,10 +225,20 @@ class BackendAPI {
     );
   }
 
-  // Initialize backend URL with auto-detection
+  // Initialize backend URL with auto-detection (ONLY IN DEV MODE)
   private async initializeBackendUrl() {
     if (this.baseUrlInitialized) return;
     
+    // PRODUCTION: Never run auto-detection - use static URL
+    if (!IS_DEV_MODE) {
+      this.client.defaults.baseURL = PROD_BASE_URL;
+      this.baseUrlInitialized = true;
+      detectedUrl = PROD_BASE_URL;
+      console.log('✅ Production mode: Using static URL:', PROD_BASE_URL);
+      return;
+    }
+    
+    // DEV MODE: Run auto-detection
     const url = await detectBackendUrl();
     this.client.defaults.baseURL = url;
     this.baseUrlInitialized = true;
@@ -288,8 +298,10 @@ class BackendAPI {
    * is_first_login should always be false (no password change needed)
    */
   async adminLogin(email: string, password: string): Promise<AuthResponse> {
-    // Ensure backend URL is initialized before login
-    await this.initializeBackendUrl();
+    // Only run initialization in dev mode (production already set in constructor)
+    if (IS_DEV_MODE && !this.baseUrlInitialized) {
+      await this.initializeBackendUrl();
+    }
     
     console.log('🔐 Admin Login Request:', { 
       email, 
@@ -526,8 +538,10 @@ class BackendAPI {
   }
 
   async getNotifications(userId: string, userType: 'driver' | 'admin'): Promise<Notification[]> {
-    // Ensure backend URL is initialized
-    await this.initializeBackendUrl();
+    // Only run initialization in dev mode
+    if (IS_DEV_MODE && !this.baseUrlInitialized) {
+      await this.initializeBackendUrl();
+    }
     
     const { data } = await this.client.get('/notifications/', { 
       params: { 
@@ -539,8 +553,10 @@ class BackendAPI {
   }
 
   async markNotificationRead(notificationId: string, userId: string): Promise<void> {
-    // Ensure backend URL is initialized
-    await this.initializeBackendUrl();
+    // Only run initialization in dev mode
+    if (IS_DEV_MODE && !this.baseUrlInitialized) {
+      await this.initializeBackendUrl();
+    }
     
     await this.client.put(`/notifications/${notificationId}/read`, null, {
       params: { user_id: userId }
