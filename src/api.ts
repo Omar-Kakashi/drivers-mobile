@@ -19,14 +19,14 @@ import {
   AuthResponse,
 } from './types';
 
-// Production backend URL - Render.com
-const PROD_BASE_URL = 'https://stsc-backend.onrender.com';
+// Production backend URL - AWS Lightsail
+const PROD_BASE_URL = 'http://13.233.225.81/api';
 
 // Environment switcher - __DEV__ is a global set by React Native
 const __DEV__ = typeof __DEV__ !== 'undefined' ? __DEV__ : false;
 
 // API Version - increment this to force cache clear on breaking changes
-const API_VERSION = '10'; // Added Render.com production URL
+const API_VERSION = '12'; // AWS Lightsail deployment
 
 // Auto-detect working backend URL (cached in AsyncStorage)
 let detectedUrl: string | null = null;
@@ -38,10 +38,10 @@ let detectedUrl: string | null = null;
 function generatePossibleUrls(): string[] {
   const urls: string[] = [];
   
-  // Priority order: Production (Render) → Tailscale → Local
+  // Priority order: Production (AWS) → Tailscale → Local
   
-  // 1. Production - Render.com (always first!)
-  urls.push('https://stsc-backend.onrender.com');
+  // 1. Production - AWS Lightsail (always first!)
+  urls.push('http://13.233.225.81/api');
   
   // 2. Tailscale nginx (works ANYWHERE via nginx reverse proxy)
   urls.push('http://100.99.182.57/api'); // Tailscale laptop via nginx port 80
