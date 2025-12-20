@@ -190,7 +190,7 @@ class BackendAPI {
       detectedUrl = initialUrl;
     }
 
-    // Request interceptor - Add JWT token & ensure correct baseURL
+    // Request interceptor - Add JWT token & ensure correct baseURL & trailing slashes
     this.client.interceptors.request.use(
       async (config) => {
         // ALWAYS ensure baseURL is set before making any request
@@ -202,6 +202,24 @@ class BackendAPI {
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
         }
+        
+        // GLOBAL FIX: Ensure trailing slash on API paths for nginx compatibility
+        // This fixes the issue where nginx routes /api/endpoint to web app instead of backend
+        // Only add trailing slash if:
+        // 1. URL doesn't already end with /
+        // 2. URL doesn't have a file extension (like .json)
+        // 3. URL path exists
+        if (config.url && !config.url.endsWith('/') && !config.url.includes('.')) {
+          // Don't add trailing slash to URLs with path parameters at the end (like /users/123)
+          // These work fine without trailing slash
+          const lastSegment = config.url.split('/').pop() || '';
+          const looksLikeId = lastSegment.match(/^[0-9a-f-]{8,}$/i); // UUID or numeric ID
+          
+          if (!looksLikeId) {
+            config.url = config.url + '/';
+          }
+        }
+        
         return config;
       },
       (error) => Promise.reject(error)
@@ -484,7 +502,7 @@ class BackendAPI {
   // ==================== INTERNAL FINES (Company-imposed fines) ====================
 
   async getDriverInternalFines(driverId: string): Promise<any[]> {
-    const { data } = await this.client.get('/internal-fines', { 
+    const { data } = await this.client.get('/internal-fines/', { 
       params: { driver_id: driverId } 
     });
     return data.fines || [];
