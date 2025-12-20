@@ -169,18 +169,25 @@ class BackendAPI {
   private baseUrlInitialized = false;
 
   constructor() {
-    // Initialize with placeholder - will be set dynamically
-    // ALWAYS use Tailscale IP for dev client, production URL for release builds
+    // Production builds use static IP directly, dev builds use auto-detection
+    const initialUrl = __DEV__ ? 'http://100.99.182.57:5000' : 'http://13.205.49.11/api';
+    
     this.client = axios.create({
-      baseURL: 'http://100.99.182.57:5000', // Tailscale IP (works anywhere)
-      timeout: 10000,
+      baseURL: initialUrl,
+      timeout: 15000, // Increased timeout for slower networks
       headers: {
         'Content-Type': 'application/json',
       },
     });
 
-    // Initialize backend URL detection (will use Tailscale if available)
-    this.initializeBackendUrl();
+    // Only run auto-detection in development mode
+    if (__DEV__) {
+      this.initializeBackendUrl();
+    } else {
+      // Production: Mark as initialized with static URL
+      this.baseUrlInitialized = true;
+      detectedUrl = initialUrl;
+    }
 
     // Request interceptor - Add JWT token & ensure correct baseURL
     this.client.interceptors.request.use(
