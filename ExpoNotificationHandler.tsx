@@ -205,7 +205,7 @@ async function detectBackendUrl(): Promise<string> {
     'http://192.168.0.111:5000',     // Home/Office WiFi
     'http://192.168.1.111:5000',     // Alternative WiFi
     'http://10.0.0.111:5000',        // Work network
-    'https://ostol.stsc.ae/api',     // Production backend (fallback)
+    'http://13.205.49.11/api',       // Production backend (AWS Lightsail Static IP)
   ];
 
   console.log('🔍 Detecting backend network...');
@@ -235,7 +235,7 @@ async function detectBackendUrl(): Promise<string> {
 
   // Fallback to production
   console.log('⚠️ No local backend found, using production');
-  return 'https://ostol.stsc.ae/api';
+  return 'http://13.205.49.11/api';
 }
 
 /**
