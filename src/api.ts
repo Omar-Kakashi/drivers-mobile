@@ -23,7 +23,8 @@ import {
 const PROD_BASE_URL = 'http://13.205.49.11/api';
 
 // Environment switcher - __DEV__ is a global set by React Native
-const __DEV__ = typeof __DEV__ !== 'undefined' ? __DEV__ : false;
+// DO NOT shadow the global __DEV__ - use it directly or create a different name
+const IS_DEV_MODE = typeof global.__DEV__ !== 'undefined' ? global.__DEV__ : false;
 
 // API Version - increment this to force cache clear on breaking changes
 const API_VERSION = '13'; // AWS Lightsail Static IP
@@ -170,7 +171,7 @@ class BackendAPI {
 
   constructor() {
     // Production builds use static IP directly, dev builds use auto-detection
-    const initialUrl = __DEV__ ? 'http://100.99.182.57:5000' : 'http://13.205.49.11/api';
+    const initialUrl = IS_DEV_MODE ? 'http://100.99.182.57:5000' : 'http://13.205.49.11/api';
     
     this.client = axios.create({
       baseURL: initialUrl,
@@ -181,7 +182,7 @@ class BackendAPI {
     });
 
     // Only run auto-detection in development mode
-    if (__DEV__) {
+    if (IS_DEV_MODE) {
       this.initializeBackendUrl();
     } else {
       // Production: Mark as initialized with static URL
@@ -237,7 +238,7 @@ class BackendAPI {
 
   // Get current backend URL
   async getBackendUrl(): Promise<string> {
-    if (__DEV__) {
+    if (IS_DEV_MODE) {
       return await detectBackendUrl();
     }
     return PROD_BASE_URL;
@@ -250,14 +251,16 @@ class BackendAPI {
    * Returns is_first_login: true if password never changed
    */
   async driverLogin(identifier: string, password: string): Promise<AuthResponse> {
-    // Ensure backend URL is initialized before login
-    await this.initializeBackendUrl();
+    // Only run auto-detection in dev mode - production uses static URL set in constructor
+    if (IS_DEV_MODE && !this.baseUrlInitialized) {
+      await this.initializeBackendUrl();
+    }
     
     console.log('🔐 Driver Login Request:', { 
       identifier: String(identifier), 
       baseURL: this.client.defaults.baseURL,
       url: '/auth/driver-login',
-      __DEV__,
+      IS_DEV_MODE,
       detectedUrl
     });
     try {
@@ -325,7 +328,7 @@ class BackendAPI {
     notifications_count: number;
   }> {
     // Ensure backend URL is initialized before API call
-    if (__DEV__) {
+    if (IS_DEV_MODE) {
       await this.initializeBackendUrl();
     }
     console.log('🔗 Full Request URL:', this.client.defaults.baseURL + `/drivers/${driverId}/dashboard`);
