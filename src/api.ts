@@ -566,12 +566,12 @@ class BackendAPI {
   // ==================== LEAVE REQUESTS ====================
 
   async getLeaveRequests(userId: string, userType: 'driver' | 'admin'): Promise<LeaveRequest[]> {
-    const { data } = await this.client.get('/leave-requests', { params: { user_id: userId, user_type: userType } });
+    const { data } = await this.client.get('/leave-requests/', { params: { user_id: userId, user_type: userType } });
     return data;
   }
 
   async getPendingLeaveRequests(): Promise<LeaveRequest[]> {
-    const { data } = await this.client.get('/leave-requests/pending-approval');
+    const { data } = await this.client.get('/leave-requests/pending-approval/');
     return data;
   }
 
