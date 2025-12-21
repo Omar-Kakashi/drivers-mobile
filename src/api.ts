@@ -1,7 +1,7 @@
 /**
  * Backend API Client - Mobile App
  * Connects to FastAPI backend with auto-detection support
- * Development: Auto-detects network IP, Production: ostol.stsc.ae/api
+ * Development: Auto-detects network IP, Production: ostoldev.stsc.ae/api
  */
 
 import axios, { AxiosInstance } from 'axios';
