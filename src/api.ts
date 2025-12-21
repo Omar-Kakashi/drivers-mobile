@@ -19,8 +19,8 @@ import {
   AuthResponse,
 } from './types';
 
-// Production backend URL - AWS Lightsail (Static IP) via nginx
-const PROD_BASE_URL = 'http://13.205.49.11/api';
+// Production backend URL - HTTPS via nginx
+const PROD_BASE_URL = 'https://ostoldev.stsc.ae/api';
 
 // Environment switcher - __DEV__ is a global set by React Native
 // DO NOT shadow the global __DEV__ - use it directly or create a different name
@@ -39,10 +39,10 @@ let detectedUrl: string | null = null;
 function generatePossibleUrls(): string[] {
   const urls: string[] = [];
   
-  // Priority order: Production (AWS Static IP) → Tailscale → Local
+  // Priority order: Production (HTTPS) → Tailscale → Local
   
-  // 1. Production - AWS Lightsail Static IP (always first!) via nginx
-  urls.push('http://13.205.49.11/api');
+  // 1. Production - HTTPS via nginx (always first!)
+  urls.push('https://ostoldev.stsc.ae/api');
   
   // 2. Tailscale nginx (works ANYWHERE via nginx reverse proxy)
   urls.push('http://100.99.182.57/api'); // Tailscale laptop via nginx port 80
@@ -170,8 +170,8 @@ class BackendAPI {
   private baseUrlInitialized = false;
 
   constructor() {
-    // Production builds use static IP directly, dev builds use auto-detection
-    const initialUrl = IS_DEV_MODE ? 'http://100.99.182.57:5000' : 'http://13.205.49.11/api';
+    // Production builds use HTTPS domain directly, dev builds use auto-detection
+    const initialUrl = IS_DEV_MODE ? 'http://100.99.182.57:5000' : 'https://ostoldev.stsc.ae/api';
     
     this.client = axios.create({
       baseURL: initialUrl,

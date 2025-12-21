@@ -15,7 +15,7 @@ const POSSIBLE_DEV_URLS = [
   'http://localhost:5000',       // Localhost fallback
 ];
 
-const PROD_BASE_URL = 'http://13.205.49.11/api';
+const PROD_BASE_URL = 'https://ostoldev.stsc.ae/api';
 
 const CACHE_KEY = '@backend_url';
 const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes

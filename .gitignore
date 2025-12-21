@@ -52,3 +52,6 @@ web-build/
 *~
 
 firebase-service-account.json
+
+# APK files
+*.apk
