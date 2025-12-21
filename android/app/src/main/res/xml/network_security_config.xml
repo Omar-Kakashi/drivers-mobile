@@ -1,14 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
-    <!-- Allow cleartext HTTP for AWS Lightsail -->
-    <domain-config cleartextTrafficPermitted="true">
-        <domain includeSubdomains="true">13.205.49.11</domain>
-    </domain-config>
+    <!-- Production: ostoldev.stsc.ae (HTTPS via Cloudflare - no cleartext needed) -->
+    <!-- All traffic goes through nginx with proper SSL -->
     
-    <!-- Allow cleartext for development IPs -->
+    <!-- Allow cleartext for local development only (optional) -->
     <domain-config cleartextTrafficPermitted="true">
-        <domain includeSubdomains="true">100.99.182.57</domain>
-        <domain includeSubdomains="true">192.168.0.111</domain>
         <domain includeSubdomains="true">10.0.2.2</domain>
         <domain includeSubdomains="true">localhost</domain>
     </domain-config>

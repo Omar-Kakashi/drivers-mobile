@@ -201,11 +201,7 @@ async function registerForPushNotificationsAsync() {
  */
 async function detectBackendUrl(): Promise<string> {
   const POSSIBLE_BACKENDS = [
-    'http://100.99.182.57:5000',     // Tailscale (works anywhere) - PRIORITY
-    'http://192.168.0.111:5000',     // Home/Office WiFi
-    'http://192.168.1.111:5000',     // Alternative WiFi
-    'http://10.0.0.111:5000',        // Work network
-    'http://13.205.49.11/api',       // Production backend (AWS Lightsail Static IP)
+    'https://ostoldev.stsc.ae/api',  // Production server via nginx (Cloudflare handles HTTPS)
   ];
 
   console.log('🔍 Detecting backend network...');
@@ -233,9 +229,9 @@ async function detectBackendUrl(): Promise<string> {
     }
   }
 
-  // Fallback to production
-  console.log('⚠️ No local backend found, using production');
-  return 'http://13.205.49.11/api';
+  // Production is the only option
+  console.log('⚠️ Backend not reachable, using production URL anyway');
+  return 'https://ostoldev.stsc.ae/api';
 }
 
 /**

@@ -39,37 +39,11 @@ let detectedUrl: string | null = null;
 function generatePossibleUrls(): string[] {
   const urls: string[] = [];
   
-  // Priority order: Production (HTTPS) → Tailscale → Local
+  // All requests go through production nginx server
+  // Cloudflare handles HTTPS, nginx routes to backend
   
-  // 1. Production - HTTPS via nginx (always first!)
+  // 1. Production - HTTPS via nginx (only option)
   urls.push('https://ostoldev.stsc.ae/api');
-  
-  // 2. Tailscale nginx (works ANYWHERE via nginx reverse proxy)
-  urls.push('http://100.99.182.57/api'); // Tailscale laptop via nginx port 80
-  
-  // 3. Local nginx (for emulator/localhost testing)
-  urls.push('http://10.0.2.2/api'); // Android emulator → host nginx
-  urls.push('http://localhost/api'); // Local nginx
-  
-  // 4. Direct backend (no nginx)
-  urls.push('http://192.168.0.111:5000'); // Laptop WiFi IP direct
-  urls.push('http://localhost:5000'); // Local backend direct
-  urls.push('http://10.0.2.2:5000'); // Android emulator direct
-  
-  // Then WiFi/Hotspot ranges (fallback when not on USB)
-  const wifiRanges = [
-    { base: '192.168.0', start: 1, end: 20 },     // Home WiFi (limited range for speed)
-    { base: '192.168.1', start: 1, end: 20 },     // Home WiFi alternative
-    { base: '172.20.10', start: 1, end: 10 },     // iPhone Mobile Hotspot
-    { base: '192.168.43', start: 1, end: 10 },    // Android Mobile Hotspot
-  ];
-  
-  // Generate URLs for WiFi ranges
-  for (const range of wifiRanges) {
-    for (let i = range.start; i <= range.end; i++) {
-      urls.push(`http://${range.base}.${i}:5000`);
-    }
-  }
   
   return urls;
 }

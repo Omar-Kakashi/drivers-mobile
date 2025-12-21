@@ -1,20 +1,13 @@
 /**
  * Network Detection for Backend API
- * Auto-detects working backend URL from multiple candidates
- * Caches result for faster subsequent calls
+ * All requests go through production nginx server
+ * No localhost fallback - consistent behavior dev/prod
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 
-// Backend URL candidates (will auto-detect which works)
-const POSSIBLE_DEV_URLS = [
-  'http://10.0.0.74:5000',       // Work network (current)
-  'http://10.0.0.27:5000',       // Work network (alternative)
-  'http://192.168.0.111:5000',   // Home network
-  'http://localhost:5000',       // Localhost fallback
-];
-
+// Production server via nginx (Cloudflare handles HTTPS)
 const PROD_BASE_URL = 'https://ostoldev.stsc.ae/api';
 
 const CACHE_KEY = '@backend_url';
