@@ -203,26 +203,6 @@ class BackendAPI {
           config.headers.Authorization = `Bearer ${token}`;
         }
         
-        // GLOBAL FIX: Ensure trailing slash on GET requests for nginx compatibility
-        // This fixes the issue where nginx routes /api/endpoint to web app instead of backend
-        // IMPORTANT: Only add trailing slash for GET requests - POST/PUT/DELETE break with trailing slash
-        // Only add trailing slash if:
-        // 1. Method is GET
-        // 2. URL doesn't already end with /
-        // 3. URL doesn't have a file extension (like .json)
-        // 4. URL path exists
-        const method = (config.method || 'get').toLowerCase();
-        if (method === 'get' && config.url && !config.url.endsWith('/') && !config.url.includes('.')) {
-          // Don't add trailing slash to URLs with path parameters at the end (like /users/123)
-          // These work fine without trailing slash
-          const lastSegment = config.url.split('/').pop() || '';
-          const looksLikeId = lastSegment.match(/^[0-9a-f-]{8,}$/i); // UUID or numeric ID
-          
-          if (!looksLikeId) {
-            config.url = config.url + '/';
-          }
-        }
-        
         return config;
       },
       (error) => Promise.reject(error)
@@ -396,7 +376,7 @@ class BackendAPI {
   }
 
   async getDriverAssignmentHistory(driverId: string): Promise<Assignment[]> {
-    const { data } = await this.client.get(`/assignments/`, { params: { driver_id: driverId } });
+    const { data } = await this.client.get('/assignments', { params: { driver_id: driverId } });
     return data;
   }
 
@@ -439,14 +419,14 @@ class BackendAPI {
 
   async getDriverAssignments(driverId: string): Promise<any[]> {
     // Backend uses primary_driver_id, not driver_id
-    const { data } = await this.client.get(`/assignments/`, { params: { primary_driver_id: driverId } });
+    const { data } = await this.client.get('/assignments', { params: { primary_driver_id: driverId } });
     return data;
   }
 
   // ==================== RENT DISCOUNTS (Share Adjustments) ====================
 
   async getDriverRentDiscounts(driverId: string): Promise<any[]> {
-    const { data } = await this.client.get('/rent-discounts/', { 
+    const { data } = await this.client.get('/rent-discounts', { 
       params: { driver_id: driverId } 
     });
     return data;
@@ -505,7 +485,7 @@ class BackendAPI {
   // ==================== INTERNAL FINES (Company-imposed fines) ====================
 
   async getDriverInternalFines(driverId: string): Promise<any[]> {
-    const { data } = await this.client.get('/internal-fines/', { 
+    const { data } = await this.client.get('/internal-fines', { 
       params: { driver_id: driverId } 
     });
     return data.fines || [];
@@ -514,7 +494,7 @@ class BackendAPI {
   // ==================== HR REQUESTS ====================
 
   async getHRRequests(userId: string, requestType?: string): Promise<any[]> {
-    const { data } = await this.client.get('/hr-requests/', { 
+    const { data } = await this.client.get('/hr-requests', { 
       params: { user_id: userId, request_type: requestType } 
     });
     return data;
@@ -526,7 +506,7 @@ class BackendAPI {
     user_type: string;
     data: Record<string, any>;
   }): Promise<any> {
-    const { data } = await this.client.post('/hr-requests/', request);
+    const { data } = await this.client.post('/hr-requests', request);
     return data;
   }
 
@@ -538,7 +518,7 @@ class BackendAPI {
     year?: number;
     status?: string;
   }): Promise<Settlement[]> {
-    const { data } = await this.client.get('/settlements/', { params });
+    const { data } = await this.client.get('/settlements', { params });
     return data;
   }
 
@@ -564,7 +544,7 @@ class BackendAPI {
       await this.initializeBackendUrl();
     }
     
-    const { data } = await this.client.get('/notifications/', { 
+    const { data } = await this.client.get('/notifications', { 
       params: { 
         user_id: userId, 
         user_role: userType  // Backend expects user_role not user_type
@@ -587,12 +567,12 @@ class BackendAPI {
   // ==================== LEAVE REQUESTS ====================
 
   async getLeaveRequests(userId: string, userType: 'driver' | 'admin'): Promise<LeaveRequest[]> {
-    const { data } = await this.client.get('/leave-requests/', { params: { user_id: userId, user_type: userType } });
+    const { data } = await this.client.get('/leave-requests', { params: { user_id: userId, user_type: userType } });
     return data;
   }
 
   async getPendingLeaveRequests(): Promise<LeaveRequest[]> {
-    const { data } = await this.client.get('/leave-requests/pending-approval/');
+    const { data } = await this.client.get('/leave-requests/pending-approval');
     return data;
   }
 
@@ -635,7 +615,7 @@ class BackendAPI {
       name: 'signature.png',
     } as any);
 
-    await this.client.post('/leave-requests/', formData, {
+    await this.client.post('/leave-requests', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
   }
@@ -677,13 +657,13 @@ class BackendAPI {
       name: 'signature.png',
     } as any);
 
-    await this.client.post('/leave-return-forms/', formData, {
+    await this.client.post('/leave-return-forms', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
   }
 
   async getLeaveReturnForms(userId?: string): Promise<any[]> {  // Changed from employeeId to userId
-    const { data } = await this.client.get('/leave-return-forms/', {
+    const { data } = await this.client.get('/leave-return-forms', {
       params: { user_id: userId }  // Changed to user_id parameter
     });
     return data;
@@ -716,7 +696,7 @@ class BackendAPI {
       name: 'signature.png',
     } as any);
 
-    await this.client.post('/passport-handover/', formData, {
+    await this.client.post('/passport-handover', formData, {
       headers: { 
         'Content-Type': 'multipart/form-data',
       },
@@ -724,7 +704,7 @@ class BackendAPI {
   }
 
   async getPassportHandovers(userId?: string): Promise<any[]> {  // Changed from employeeId to userId
-    const { data } = await this.client.get('/passport-handover/', {
+    const { data } = await this.client.get('/passport-handover', {
       params: { user_id: userId }  // Changed to user_id parameter
     });
     return data;
