@@ -9,15 +9,17 @@ import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 /**
- * Detect available backend (tries local networks first)
+ * Detect available backend (tries local networks first, falls back to production)
  */
 async function detectBackendUrl(): Promise<string> {
   const POSSIBLE_BACKENDS = [
-    'http://100.99.182.57/api',      // Tailscale via nginx (PRIORITY)
+    'http://100.99.182.57/api',      // Tailscale via nginx (PRIORITY for dev)
     'http://100.99.182.57:5000',     // Tailscale direct (fallback)
     'http://192.168.0.111:5000',     // Home/Office WiFi
     'http://10.0.2.2/api',           // Android emulator via nginx
     'http://localhost/api',           // Local nginx
+    'http://13.205.49.11/api',       // Production backend (AWS Lightsail Static IP)
+    'https://ostoldev.stsc.ae/api',  // Production domain
   ];
 
   for (const url of POSSIBLE_BACKENDS) {
@@ -34,6 +36,7 @@ async function detectBackendUrl(): Promise<string> {
       clearTimeout(timeoutId);
 
       if (response.ok || response.status === 404) {
+        console.log('✅ Backend found for push token registration:', url);
         return url;
       }
     } catch (error) {
@@ -41,8 +44,9 @@ async function detectBackendUrl(): Promise<string> {
     }
   }
 
-  // Default to Tailscale nginx
-  return 'http://100.99.182.57/api';
+  // Default to production domain (most reliable)
+  console.log('⚠️ No local backend found, using production for push tokens');
+  return 'https://ostoldev.stsc.ae/api';
 }
 
 /**
