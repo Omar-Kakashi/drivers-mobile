@@ -423,28 +423,13 @@ class BackendAPI {
     return data;
   }
 
-  // ==================== RENT DISCOUNTS (Share Adjustments) ====================
-
-  async getDriverRentDiscounts(driverId: string): Promise<any[]> {
-    const { data } = await this.client.get('/rent-discounts', { 
-      params: { driver_id: driverId } 
-    });
-    return data;
-  }
-
-  async requestRentDiscount(request: {
-    driver_id: string;
-    vehicle_id: string;
-    discount_type: string;
-    discount_date: string;
-    discount_days: number;
-    daily_rate: number;
-    reason: string;
-    notes?: string;
-    job_card_picture_url?: string;
-    requested_by?: string;
-  }): Promise<any> {
-    const { data } = await this.client.post('/rent-discounts/request', request);
+  /**
+   * Get all drivers (for admin features like creating share adjustments)
+   */
+  async getDrivers(status?: string): Promise<any[]> {
+    const params: any = {};
+    if (status) params.status = status;
+    const { data } = await this.client.get('/drivers', { params });
     return data;
   }
 
@@ -525,6 +510,77 @@ class BackendAPI {
   async getSettlementById(id: string): Promise<Settlement> {
     const { data } = await this.client.get(`/settlements/${id}`);
     return data;
+  }
+
+  // ==================== RENT DISCOUNTS (Share Adjustments) ====================
+
+  /**
+   * Get pending rent discounts awaiting approval
+   */
+  async getPendingRentDiscounts(): Promise<any[]> {
+    const { data } = await this.client.get('/rent-discounts/pending/list');
+    return data;
+  }
+
+  /**
+   * Get rent discounts for a specific driver
+   */
+  async getDriverRentDiscounts(driverId: string): Promise<any[]> {
+    const { data } = await this.client.get(`/rent-discounts/driver/${driverId}`);
+    return data;
+  }
+
+  /**
+   * Request a rent discount (share adjustment)
+   */
+  async requestRentDiscount(request: {
+    driver_id: string;
+    vehicle_id: string;
+    assignment_id?: string;
+    discount_type: string;
+    discount_date: string;
+    discount_days: number;
+    daily_rate: number;
+    reason: string;
+    job_card_picture_url?: string;
+    requested_by: string;
+    requested_by_type: string;
+  }): Promise<any> {
+    const { data } = await this.client.post('/rent-discounts', request);
+    return data;
+  }
+
+  /**
+   * Approve a rent discount
+   */
+  async approveRentDiscount(
+    discountId: string,
+    approvedBy: string,
+    approverRole: string,
+    signatureUrl?: string  // Optional - for quick mobile approval
+  ): Promise<void> {
+    const body: Record<string, string> = {
+      approved_by: approvedBy,
+      approver_role: approverRole,
+    };
+    if (signatureUrl) {
+      body.approval_signature_url = signatureUrl;
+    }
+    await this.client.put(`/rent-discounts/${discountId}/approve`, body);
+  }
+
+  /**
+   * Reject a rent discount
+   */
+  async rejectRentDiscount(
+    discountId: string,
+    reason: string,
+    rejectedBy: string
+  ): Promise<void> {
+    await this.client.put(`/rent-discounts/${discountId}/reject`, {
+      reason: reason,
+      rejected_by: rejectedBy,
+    });
   }
 
   // ==================== ADMIN ENDPOINTS ====================

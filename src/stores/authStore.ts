@@ -21,7 +21,7 @@ const remoteLog = async (message: string, data?: any) => {
     console.log('📱 REMOTE LOG:', logData);
     
     // Send to backend (fire and forget)
-    fetch('http://13.205.49.11/api/mobile-logs/', {
+    fetch('http://13.205.49.11/api/mobile-logs', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(logData),
