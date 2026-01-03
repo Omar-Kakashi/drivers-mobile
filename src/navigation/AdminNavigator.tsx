@@ -10,7 +10,7 @@ import { theme } from '../theme';
 // Admin Screens
 import AdminDashboardScreen from '../screens/admin/AdminDashboardScreen';
 import NotificationsScreen from '../screens/admin/NotificationsScreen';
-import ApprovalsScreen from '../screens/admin/ApprovalsScreen';
+import RequestsScreen from '../screens/admin/RequestsScreen';
 import AdminHRScreen from '../screens/admin/AdminHRScreen';
 
 const Tab = createBottomTabNavigator();
@@ -41,10 +41,11 @@ export default function AdminNavigator() {
         }}
       />
       <Tab.Screen
-        name="Approvals"
-        component={ApprovalsScreen}
+        name="Requests"
+        component={RequestsScreen}
         options={{
-          tabBarIcon: ({ color, size }) => <Ionicons name="checkmark-circle" size={size} color={color} />,
+          tabBarIcon: ({ color, size }) => <Ionicons name="list" size={size} color={color} />,
+          title: 'Requests',
         }}
       />
       <Tab.Screen

@@ -201,25 +201,31 @@ async function registerForPushNotificationsAsync() {
  */
 async function detectBackendUrl(): Promise<string> {
   const POSSIBLE_BACKENDS = [
-    'https://ostoldev.stsc.ae/api',  // Production server via nginx (Cloudflare handles HTTPS)
+    'http://100.99.182.57/api',      // Tailscale via nginx - PRIORITY
+    'http://100.99.182.57:5000',     // Tailscale direct (fallback)
+    'http://192.168.0.111:5000',     // Home/Office WiFi
+    'http://192.168.1.111:5000',     // Alternative WiFi
+    'http://10.0.0.111:5000',        // Work network
+    'http://13.205.49.11/api',       // Production backend (AWS Lightsail Static IP)
+    'https://ostoldev.stsc.ae/api',  // Production domain
   ];
 
-  console.log('🔍 Detecting backend network...');
+  console.log('🔍 Detecting backend network for push token...');
 
   for (const url of POSSIBLE_BACKENDS) {
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 2000); // 2 second timeout
 
-      const response = await fetch(`${url}/`, {
+      const healthUrl = url.endsWith('/api') ? `${url}/health` : `${url}/health`;
+      const response = await fetch(healthUrl, {
         method: 'GET',
         signal: controller.signal,
       });
 
       clearTimeout(timeoutId);
 
-      if (response.ok || response.status === 404) {
-        // 404 is OK - means backend is reachable (just no root route)
+      if (response.ok) {
         console.log(`✅ Backend found at: ${url}`);
         return url;
       }
@@ -229,8 +235,8 @@ async function detectBackendUrl(): Promise<string> {
     }
   }
 
-  // Production is the only option
-  console.log('⚠️ Backend not reachable, using production URL anyway');
+  // Fallback to production domain (most reliable)
+  console.log('⚠️ No local backend found, using production domain');
   return 'https://ostoldev.stsc.ae/api';
 }
 

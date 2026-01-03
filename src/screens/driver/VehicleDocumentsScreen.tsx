@@ -1,9 +1,10 @@
 /**
  * Vehicle Documents Screen - View documents of assigned vehicle
+ * Shows real Mulkiya (registration) PDF from MinIO storage
  */
 
 import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator, Image } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../../theme';
 import { useAuthStore } from '../../stores/authStore';
@@ -15,8 +16,16 @@ interface VehicleDocument {
   name: string;
   type: string;
   expiryDate: string | null;
-  url: string;
-  thumbnail?: string;
+  url: string | null;
+  available: boolean;
+}
+
+interface VehicleData {
+  license_plate: string;
+  make_model?: string;
+  mulkiya_url?: string;
+  registration_expiry?: string;
+  insurance_expiry?: string;
 }
 
 export default function VehicleDocumentsScreen() {
@@ -25,6 +34,7 @@ export default function VehicleDocumentsScreen() {
   const [loading, setLoading] = useState(true);
   const [documents, setDocuments] = useState<VehicleDocument[]>([]);
   const [vehicleLicense, setVehicleLicense] = useState('');
+  const [vehicleMakeModel, setVehicleMakeModel] = useState('');
 
   useEffect(() => {
     loadVehicleDocuments();
@@ -36,37 +46,52 @@ export default function VehicleDocumentsScreen() {
       const data = await backendAPI.getDriverAssignment(driver.id);
       
       if (data && data.assignment && data.vehicle) {
-        setVehicleLicense(data.vehicle.license_plate);
-        // TODO: Implement backend endpoint to fetch vehicle documents
-        // For now, using mock data
-        setDocuments([
-          {
-            id: '1',
-            name: 'Vehicle Registration (Mulkiya)',
-            type: 'registration',
-            expiryDate: '2026-03-15',
-            url: 'https://example.com/reg.pdf',
-          },
-          {
-            id: '2',
-            name: 'Insurance Certificate',
-            type: 'insurance',
-            expiryDate: '2025-12-31',
-            url: 'https://example.com/insurance.pdf',
-          },
-          {
-            id: '3',
-            name: 'Vehicle License',
-            type: 'license',
-            expiryDate: '2026-06-20',
-            url: 'https://example.com/license.pdf',
-          },
-        ]);
+        const vehicle = data.vehicle as VehicleData;
+        setVehicleLicense(vehicle.license_plate);
+        setVehicleMakeModel(vehicle.make_model || '');
+        
+        // Build documents list from real vehicle data
+        const docs: VehicleDocument[] = [];
+        
+        // Mulkiya (Vehicle Registration) - from mulkiya_url field
+        docs.push({
+          id: 'mulkiya',
+          name: 'Vehicle Registration (Mulkiya)',
+          type: 'registration',
+          expiryDate: vehicle.registration_expiry || null,
+          url: vehicle.mulkiya_url || null,
+          available: !!vehicle.mulkiya_url,
+        });
+        
+        // Insurance Certificate - placeholder for future
+        docs.push({
+          id: 'insurance',
+          name: 'Insurance Certificate',
+          type: 'insurance',
+          expiryDate: vehicle.insurance_expiry || null,
+          url: null, // TODO: Add insurance_url to backend
+          available: false,
+        });
+        
+        setDocuments(docs);
       }
     } catch (error) {
       console.error('Failed to load vehicle documents:', error);
     } finally {
       setLoading(false);
+    }
+  };
+  
+  const openDocument = async (url: string) => {
+    try {
+      const supported = await Linking.canOpenURL(url);
+      if (supported) {
+        await Linking.openURL(url);
+      } else {
+        console.error('Cannot open URL:', url);
+      }
+    } catch (error) {
+      console.error('Error opening document:', error);
     }
   };
 
@@ -124,6 +149,9 @@ export default function VehicleDocumentsScreen() {
         <View style={styles.vehicleInfo}>
           <Text style={styles.vehicleLabel}>Assigned Vehicle</Text>
           <Text style={styles.vehicleLicense}>{vehicleLicense}</Text>
+          {vehicleMakeModel && (
+            <Text style={styles.vehicleModel}>{vehicleMakeModel}</Text>
+          )}
         </View>
       </View>
 
@@ -134,19 +162,28 @@ export default function VehicleDocumentsScreen() {
         {documents.map((doc) => {
           const expiringSoon = isExpiringSoon(doc.expiryDate);
           const expired = isExpired(doc.expiryDate);
+          const isAvailable = doc.available && doc.url;
           
           return (
-            <TouchableOpacity key={doc.id} style={styles.documentCard}>
+            <TouchableOpacity 
+              key={doc.id} 
+              style={[styles.documentCard, !isAvailable && styles.documentCardUnavailable]}
+              onPress={() => isAvailable && doc.url && openDocument(doc.url)}
+              disabled={!isAvailable}
+            >
               <View style={[
-                styles.documentIcon,
+                styles.documentIconBox,
                 expired && styles.documentIconExpired,
                 expiringSoon && !expired && styles.documentIconWarning,
+                !isAvailable && styles.documentIconUnavailable,
               ]}>
                 <Ionicons
                   name={getDocumentIcon(doc.type) as any}
                   size={28}
                   color={
-                    expired
+                    !isAvailable
+                      ? theme.colors.text.secondary
+                      : expired
                       ? theme.colors.error
                       : expiringSoon
                       ? theme.colors.warning
@@ -156,8 +193,12 @@ export default function VehicleDocumentsScreen() {
               </View>
               
               <View style={styles.documentInfo}>
-                <Text style={styles.documentName}>{doc.name}</Text>
-                {doc.expiryDate && (
+                <Text style={[styles.documentName, !isAvailable && styles.documentNameUnavailable]}>
+                  {doc.name}
+                </Text>
+                {!isAvailable ? (
+                  <Text style={styles.unavailableText}>Not available</Text>
+                ) : doc.expiryDate ? (
                   <View style={styles.expiryContainer}>
                     <Ionicons
                       name="calendar-outline"
@@ -182,12 +223,16 @@ export default function VehicleDocumentsScreen() {
                         : `Expires: ${new Date(doc.expiryDate).toLocaleDateString()}`}
                     </Text>
                   </View>
+                ) : (
+                  <Text style={styles.tapToViewText}>Tap to view PDF</Text>
                 )}
               </View>
               
-              <TouchableOpacity style={styles.viewButton}>
-                <Ionicons name="eye-outline" size={24} color={theme.colors.driver.primary} />
-              </TouchableOpacity>
+              {isAvailable && (
+                <View style={styles.viewButton}>
+                  <Ionicons name="open-outline" size={24} color={theme.colors.driver.primary} />
+                </View>
+              )}
             </TouchableOpacity>
           );
         })}
@@ -262,6 +307,11 @@ const styles = StyleSheet.create({
     color: theme.colors.text.white,
     fontWeight: 'bold',
   },
+  vehicleModel: {
+    ...theme.typography.body2,
+    color: 'rgba(255, 255, 255, 0.7)',
+    marginTop: 2,
+  },
   section: {
     marginHorizontal: theme.spacing.md,
     marginTop: theme.spacing.md,
@@ -280,7 +330,10 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.sm,
     ...theme.shadows.small,
   },
-  documentIcon: {
+  documentCardUnavailable: {
+    opacity: 0.6,
+  },
+  documentIconBox: {
     width: 50,
     height: 50,
     borderRadius: 25,
@@ -295,6 +348,9 @@ const styles = StyleSheet.create({
   documentIconWarning: {
     backgroundColor: '#fff3e0',
   },
+  documentIconUnavailable: {
+    backgroundColor: theme.colors.background,
+  },
   documentInfo: {
     flex: 1,
   },
@@ -303,6 +359,18 @@ const styles = StyleSheet.create({
     color: theme.colors.text.primary,
     fontWeight: '600',
     marginBottom: theme.spacing.xs,
+  },
+  documentNameUnavailable: {
+    color: theme.colors.text.secondary,
+  },
+  unavailableText: {
+    ...theme.typography.caption,
+    color: theme.colors.text.secondary,
+    fontStyle: 'italic',
+  },
+  tapToViewText: {
+    ...theme.typography.caption,
+    color: theme.colors.driver.primary,
   },
   expiryContainer: {
     flexDirection: 'row',

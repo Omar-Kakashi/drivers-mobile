@@ -80,7 +80,6 @@ export default function DriverDashboardScreen() {
             <Logo size={40} />
             <View style={styles.headerText}>
               <Text style={styles.greeting}>Hello, {driver.name.split(' ')[0]}</Text>
-              <Text style={styles.driverId}>ID: {driver.driver_id}</Text>
             </View>
           </View>
           <TouchableOpacity
