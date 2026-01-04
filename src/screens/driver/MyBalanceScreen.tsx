@@ -1,29 +1,27 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, RefreshControl, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, StyleSheet, ScrollView, RefreshControl, TouchableOpacity } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { theme } from '../../theme';
 import { useAuthStore } from '../../stores/authStore';
-import { backendAPI } from '../../api';
+import { useBalanceStore } from '../../stores/balanceStore';
+import { BalanceSkeleton } from '../../components/SkeletonLoader';
+import { lightHaptic } from '../../utils/haptics';
 
 export default function MyBalanceScreen() {
   const { user } = useAuthStore();
   const navigation = useNavigation<any>();
-  const [loading, setLoading] = useState(true);
+  
+  // Use cached store
+  const { 
+    balance, 
+    isLoading, 
+    isRefreshing,
+    fetchBalance 
+  } = useBalanceStore();
+  
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [balance, setBalance] = useState<any>(null);
-
-  const loadBalance = async () => {
-    try {
-      const balance = await backendAPI.getDriverBalance(user?.id || '');
-      setBalance(balance);
-    } catch (error) {
-      console.error('Failed to load balance:', error);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
 
   const formatAmount = (amount: any): string => {
     if (amount === null || amount === undefined) return '0.00';
@@ -33,21 +31,19 @@ export default function MyBalanceScreen() {
 
   useEffect(() => {
     if (user?.id) {
-      loadBalance();
+      fetchBalance(user.id).then(() => setIsInitialLoad(false));
     }
   }, [user]);
 
-  const onRefresh = () => {
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    loadBalance();
-  };
+    lightHaptic();
+    await fetchBalance(user?.id || '', true);
+    setRefreshing(false);
+  }, [user?.id]);
 
-  if (loading) {
-    return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color={theme.colors.driver.primary} />
-      </View>
-    );
+  if (isInitialLoad && isLoading) {
+    return <BalanceSkeleton />;
   }
 
   return (
@@ -67,7 +63,10 @@ export default function MyBalanceScreen() {
           <Text style={styles.cardTitle}>Financial Summary</Text>
           <TouchableOpacity
             style={styles.settlementsButton}
-            onPress={() => navigation.navigate('Settlements')}
+            onPress={() => {
+              lightHaptic();
+              navigation.navigate('Settlements');
+            }}
           >
             <Ionicons name="list-outline" size={20} color={theme.colors.driver.primary} />
             <Text style={styles.settlementsButtonText}>View History</Text>
@@ -151,7 +150,10 @@ export default function MyBalanceScreen() {
       {/* Request Adjustment Button */}
       <TouchableOpacity
         style={styles.adjustmentButton}
-        onPress={() => navigation.navigate('ShareAdjustmentRequest')}
+        onPress={() => {
+          lightHaptic();
+          navigation.navigate('ShareAdjustmentRequest');
+        }}
       >
         <MaterialCommunityIcons name="file-document-edit" size={24} color={theme.colors.white} />
         <View style={styles.adjustmentButtonContent}>
@@ -169,12 +171,6 @@ export default function MyBalanceScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
     backgroundColor: theme.colors.background,
   },
   balanceCard: {

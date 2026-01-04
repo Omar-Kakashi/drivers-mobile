@@ -2,16 +2,16 @@
  * Driver Transaction History Screen - View detailed transaction breakdown
  * Replaces DriverSettlementsScreen with real-time transaction data
  * Matches web app implementation (DriverBalanceScreen.tsx)
+ * Enhanced with skeleton loading and haptic feedback
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  ActivityIndicator,
   RefreshControl,
   FlatList,
 } from 'react-native';
@@ -19,6 +19,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../../theme';
 import { useAuthStore } from '../../stores/authStore';
 import { backendAPI } from '../../api';
+import { TransactionListSkeleton } from '../../components/SkeletonLoader';
+import { lightHaptic, selectionHaptic } from '../../utils/haptics';
 
 interface Transaction {
   id: string;
@@ -49,6 +51,7 @@ export default function DriverTransactionHistoryScreen() {
   const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [filterType, setFilterType] = useState<string>('all');
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
 
   useEffect(() => {
     if (user?.id) {
@@ -59,7 +62,7 @@ export default function DriverTransactionHistoryScreen() {
   const loadTransactions = async (isRefresh = false) => {
     if (isRefresh) {
       setRefreshing(true);
-    } else {
+    } else if (isInitialLoad) {
       setLoading(true);
     }
 
@@ -76,12 +79,14 @@ export default function DriverTransactionHistoryScreen() {
     } finally {
       setLoading(false);
       setRefreshing(false);
+      setIsInitialLoad(false);
     }
   };
 
-  const handleRefresh = () => {
+  const handleRefresh = useCallback(() => {
+    lightHaptic();
     loadTransactions(true);
-  };
+  }, [selectedMonth, selectedYear, filterType]);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-AE', {
@@ -143,6 +148,7 @@ export default function DriverTransactionHistoryScreen() {
   };
 
   const changeMonth = (delta: number) => {
+    selectionHaptic();
     let newMonth = selectedMonth + delta;
     let newYear = selectedYear;
 
@@ -187,12 +193,8 @@ export default function DriverTransactionHistoryScreen() {
     </View>
   );
 
-  if (loading) {
-    return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color={theme.colors.driver.primary} />
-      </View>
-    );
+  if (isInitialLoad && loading) {
+    return <TransactionListSkeleton />;
   }
 
   return (
@@ -218,7 +220,10 @@ export default function DriverTransactionHistoryScreen() {
           {['all', 'income', 'rent', 'salik', 'traffic_fine', 'payment'].map((type) => (
             <TouchableOpacity
               key={type}
-              onPress={() => setFilterType(type)}
+              onPress={() => {
+                selectionHaptic();
+                setFilterType(type);
+              }}
               style={[
                 styles.filterButton,
                 filterType === type && styles.filterButtonActive,
@@ -293,12 +298,6 @@ export default function DriverTransactionHistoryScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
     backgroundColor: theme.colors.background,
   },
   monthSelector: {

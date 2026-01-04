@@ -1,20 +1,25 @@
 /**
  * Driver Dashboard Screen - Overview for drivers
+ * Enhanced with skeleton loading, cached stores, and haptic feedback
  */
 
-import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator, Image } from 'react-native';
+import React, { useEffect, useState, useCallback } from 'react';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { theme } from '../../theme';
 import { useAuthStore } from '../../stores/authStore';
-import { backendAPI } from '../../api';
-import { Driver, Assignment, Balance } from '../../types';
-import { toastLoadError } from '../../utils/toastHelpers';
+import { useBalanceStore } from '../../stores/balanceStore';
+import { useAssignmentStore } from '../../stores/assignmentStore';
+import { useNotificationStore } from '../../stores/notificationStore';
+import { Driver } from '../../types';
 import { Screen } from '../../components/Screen';
 import { Card } from '../../components/Card';
 import { Button } from '../../components/Button';
 import { Logo } from '../../components/Logo';
+import { OptimizedImage } from '../../components/OptimizedImage';
+import { DashboardSkeleton } from '../../components/SkeletonLoader';
+import { lightHaptic, selectionHaptic } from '../../utils/haptics';
 import { resolveImageUrl } from '../../utils/urlHelper';
 
 const formatAmount = (amount: any): string => {
@@ -24,56 +29,90 @@ const formatAmount = (amount: any): string => {
 };
 
 export default function DriverDashboardScreen() {
-  const { user, logout } = useAuthStore();
+  const { user } = useAuthStore();
   const driver = user as Driver;
   const navigation = useNavigation<any>();
 
-  const [loading, setLoading] = useState(true);
-  const [currentAssignment, setCurrentAssignment] = useState<Assignment | null>(null);
-  const [balance, setBalance] = useState<Balance | null>(null);
-  const [notificationsCount, setNotificationsCount] = useState(0);
+  // Use cached stores
+  const { 
+    balance, 
+    isLoading: balanceLoading, 
+    isRefreshing: balanceRefreshing,
+    fetchBalance 
+  } = useBalanceStore();
+  
+  const { 
+    currentAssignment, 
+    isLoading: assignmentLoading,
+    fetchCurrentAssignment 
+  } = useAssignmentStore();
+  
+  const { 
+    unreadCount,
+    fetchNotifications 
+  } = useNotificationStore();
 
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Initial load
   useEffect(() => {
     loadDashboardData();
   }, []);
 
   const loadDashboardData = async () => {
     try {
-      console.log('📊 Loading dashboard for driver:', driver.id, driver.driver_id);
-      const data = await backendAPI.getDriverDashboard(driver.id);
-      console.log('✅ Dashboard data received:', JSON.stringify(data, null, 2));
-      setCurrentAssignment(data.current_assignment);
-
-      // Fetch Detailed Balance
-      try {
-        const detailedBalance = await backendAPI.getDriverBalance(driver.id);
-        setBalance(detailedBalance);
-      } catch (e) {
-        console.log('⚠️ Failed to load detailed balance, using summary', e);
-        setBalance(data.balance);
-      }
-
-      setNotificationsCount(data.notifications_count);
+      console.log('📊 Loading dashboard for driver:', driver.id);
+      
+      // Fetch all data in parallel using stores
+      await Promise.all([
+        fetchCurrentAssignment(driver.id),
+        fetchBalance(driver.id),
+        fetchNotifications(driver.id, 'driver'),
+      ]);
     } catch (error: any) {
       console.error('❌ Dashboard load error:', error);
-      console.error('❌ Error details:', error.response?.data || error.message);
-      toastLoadError();
     } finally {
-      setLoading(false);
+      setIsInitialLoad(false);
     }
   };
 
-  if (loading) {
+  // Pull to refresh
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    lightHaptic(); // Haptic feedback on pull
+    
+    await Promise.all([
+      fetchCurrentAssignment(driver.id, true),
+      fetchBalance(driver.id, true),
+      fetchNotifications(driver.id, 'driver', true),
+    ]);
+    
+    setRefreshing(false);
+  }, [driver.id]);
+
+  // Show skeleton on initial load only
+  if (isInitialLoad && (balanceLoading || assignmentLoading)) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={theme.colors.primary} />
-      </View>
+      <Screen style={styles.container}>
+        <DashboardSkeleton />
+      </Screen>
     );
   }
 
   return (
     <Screen style={styles.container} padding>
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            colors={[theme.colors.primary]}
+            tintColor={theme.colors.primary}
+          />
+        }
+      >
         {/* Header Section */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
@@ -84,12 +123,15 @@ export default function DriverDashboardScreen() {
           </View>
           <TouchableOpacity
             style={styles.notificationButton}
-            onPress={() => navigation.navigate('Notifications')}
+            onPress={() => {
+              selectionHaptic();
+              navigation.navigate('Notifications');
+            }}
           >
             <Ionicons name="notifications-outline" size={24} color={theme.colors.text.primary} />
-            {notificationsCount > 0 && (
+            {unreadCount > 0 && (
               <View style={styles.badge}>
-                <Text style={styles.badgeText}>{notificationsCount}</Text>
+                <Text style={styles.badgeText}>{unreadCount}</Text>
               </View>
             )}
           </TouchableOpacity>
@@ -100,8 +142,8 @@ export default function DriverDashboardScreen() {
         {currentAssignment ? (
           <Card variant="elevated" noPadding style={styles.vehicleCard}>
             {resolveImageUrl(currentAssignment.vehicle_image_url) && (
-              <Image
-                source={{ uri: resolveImageUrl(currentAssignment.vehicle_image_url) }}
+              <OptimizedImage
+                source={resolveImageUrl(currentAssignment.vehicle_image_url)}
                 style={styles.vehicleImage}
               />
             )}
@@ -135,7 +177,10 @@ export default function DriverDashboardScreen() {
                 title="Vehicle Documents"
                 variant="outline"
                 size="small"
-                onPress={() => navigation.navigate('VehicleDocuments')}
+                onPress={() => {
+                  lightHaptic();
+                  navigation.navigate('VehicleDocuments');
+                }}
                 style={styles.vehicleDocsButton}
               />
             </View>
@@ -204,7 +249,10 @@ export default function DriverDashboardScreen() {
         <View style={styles.actionsGrid}>
           <TouchableOpacity
             style={styles.actionItem}
-            onPress={() => navigation.navigate('Leave Request')}
+            onPress={() => {
+              lightHaptic();
+              navigation.navigate('Leave Request');
+            }}
           >
             <View style={[styles.actionIcon, { backgroundColor: theme.colors.primaryLight + '20' }]}>
               <Ionicons name="calendar" size={24} color={theme.colors.primary} />
@@ -214,7 +262,10 @@ export default function DriverDashboardScreen() {
 
           <TouchableOpacity
             style={styles.actionItem}
-            onPress={() => navigation.navigate('Assignments')}
+            onPress={() => {
+              lightHaptic();
+              navigation.navigate('Assignments');
+            }}
           >
             <View style={[styles.actionIcon, { backgroundColor: theme.colors.secondary + '20' }]}>
               <Ionicons name="time" size={24} color={theme.colors.secondary} />
@@ -224,7 +275,10 @@ export default function DriverDashboardScreen() {
 
           <TouchableOpacity
             style={styles.actionItem}
-            onPress={() => navigation.navigate('TrafficFines')}
+            onPress={() => {
+              lightHaptic();
+              navigation.navigate('TrafficFines');
+            }}
           >
             <View style={[styles.actionIcon, { backgroundColor: '#EF4444' + '20' }]}>
               <Ionicons name="alert-circle" size={24} color="#EF4444" />
@@ -234,7 +288,10 @@ export default function DriverDashboardScreen() {
 
           <TouchableOpacity
             style={styles.actionItem}
-            onPress={() => navigation.navigate('AccidentReport')}
+            onPress={() => {
+              lightHaptic();
+              navigation.navigate('AccidentReport');
+            }}
           >
             <View style={[styles.actionIcon, { backgroundColor: '#DC2626' + '20' }]}>
               <Ionicons name="car-sport" size={24} color="#DC2626" />
@@ -251,11 +308,6 @@ export default function DriverDashboardScreen() {
 const styles = StyleSheet.create({
   container: {
     backgroundColor: theme.colors.background,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   scrollContent: {
     paddingBottom: theme.spacing.xl,

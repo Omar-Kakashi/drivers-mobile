@@ -1,46 +1,40 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, ActivityIndicator, RefreshControl } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, StyleSheet, ScrollView, RefreshControl } from 'react-native';
 import { theme } from '../../theme';
 import { useAuthStore } from '../../stores/authStore';
-import { backendAPI } from '../../api';
+import { useAssignmentStore } from '../../stores/assignmentStore';
+import { AssignmentListSkeleton } from '../../components/SkeletonLoader';
+import { lightHaptic } from '../../utils/haptics';
 
 export default function MyAssignmentsScreen() {
   const { user } = useAuthStore();
-  const [loading, setLoading] = useState(true);
+  
+  // Use cached store
+  const { 
+    currentAssignment: assignment, 
+    vehicle, 
+    isLoading,
+    fetchCurrentAssignment 
+  } = useAssignmentStore();
+  
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [assignment, setAssignment] = useState<any>(null);
-  const [vehicle, setVehicle] = useState<any>(null);
-
-  const loadAssignment = async () => {
-    try {
-      const data = await backendAPI.getDriverAssignment(user?.id || '');
-      setAssignment(data.assignment);
-      setVehicle(data.vehicle);
-    } catch (error) {
-      console.error('Failed to load assignment:', error);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
 
   useEffect(() => {
     if (user?.id) {
-      loadAssignment();
+      fetchCurrentAssignment(user.id).then(() => setIsInitialLoad(false));
     }
   }, [user]);
 
-  const onRefresh = () => {
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    loadAssignment();
-  };
+    lightHaptic();
+    await fetchCurrentAssignment(user?.id || '', true);
+    setRefreshing(false);
+  }, [user?.id]);
 
-  if (loading) {
-    return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color={theme.colors.driver.primary} />
-      </View>
-    );
+  if (isInitialLoad && isLoading) {
+    return <AssignmentListSkeleton />;
   }
 
   if (!assignment) {
@@ -120,12 +114,6 @@ export default function MyAssignmentsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.background,
-  },
-  centerContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
     backgroundColor: theme.colors.background,
   },
   emptyState: {

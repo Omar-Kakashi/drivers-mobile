@@ -1,54 +1,50 @@
 /**
  * Notifications Screen - View and manage notifications
+ * Enhanced with skeleton loading, cached store, and haptic feedback
  */
 
-import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, ActivityIndicator, RefreshControl } from 'react-native';
+import React, { useEffect, useState, useCallback } from 'react';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { theme } from '../../theme';
 import { useAuthStore } from '../../stores/authStore';
-import { backendAPI } from '../../api';
+import { useNotificationStore } from '../../stores/notificationStore';
+import { NotificationListSkeleton } from '../../components/SkeletonLoader';
+import { lightHaptic, selectionHaptic } from '../../utils/haptics';
 import { Notification } from '../../types';
 
 export default function NotificationsScreen() {
   const { user } = useAuthStore();
   const navigation = useNavigation<any>();
-  const [loading, setLoading] = useState(true);
+  
+  // Use cached store
+  const { 
+    notifications, 
+    isLoading,
+    fetchNotifications,
+    markAsRead 
+  } = useNotificationStore();
+  
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
 
   useEffect(() => {
-    loadNotifications();
+    fetchNotifications(user?.id || '', 'driver').then(() => setIsInitialLoad(false));
     
     // Auto-refresh every 30 seconds
-    const interval = setInterval(loadNotifications, 30000);
+    const interval = setInterval(() => {
+      fetchNotifications(user?.id || '', 'driver');
+    }, 30000);
     return () => clearInterval(interval);
   }, []);
 
-  const loadNotifications = async () => {
-    try {
-      const data = await backendAPI.getNotifications(user?.id || '', 'driver');
-      setNotifications(data);
-    } catch (error) {
-      console.error('Failed to load notifications:', error);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
-
   const handleNotificationPress = async (notification: Notification) => {
-    // Mark as read
+    selectionHaptic();
+    
+    // Mark as read using store
     if (!notification.is_read) {
-      try {
-        await backendAPI.markNotificationRead(notification.id, user?.id || '');
-        setNotifications(prev =>
-          prev.map(n => n.id === notification.id ? { ...n, is_read: true } : n)
-        );
-      } catch (error) {
-        console.error('Failed to mark notification as read:', error);
-      }
+      await markAsRead(notification.id, user?.id || '');
     }
 
     // Navigate based on notification type
@@ -76,10 +72,12 @@ export default function NotificationsScreen() {
     }
   };
 
-  const onRefresh = () => {
+  const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    loadNotifications();
-  };
+    lightHaptic();
+    await fetchNotifications(user?.id || '', 'driver', true);
+    setRefreshing(false);
+  }, [user?.id]);
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
@@ -105,12 +103,8 @@ export default function NotificationsScreen() {
     }
   };
 
-  if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={theme.colors.driver.primary} />
-      </View>
-    );
+  if (isInitialLoad && isLoading) {
+    return <NotificationListSkeleton />;
   }
 
   return (
@@ -157,11 +151,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
-  },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   emptyContainer: {
     flex: 1,
