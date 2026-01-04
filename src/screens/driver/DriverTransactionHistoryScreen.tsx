@@ -304,7 +304,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.surface,
     paddingVertical: theme.spacing.md,
     paddingHorizontal: theme.spacing.lg,
     borderBottomWidth: 1,
@@ -323,7 +323,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   filterContainer: {
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.surface,
     paddingVertical: theme.spacing.sm,
     paddingHorizontal: theme.spacing.md,
     borderBottomWidth: 1,
@@ -345,15 +345,15 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   filterButtonTextActive: {
-    color: theme.colors.white,
+    color: theme.colors.text.white,
     fontWeight: '600',
   },
   summaryCard: {
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.surface,
     margin: theme.spacing.md,
     padding: theme.spacing.lg,
     borderRadius: 12,
-    ...theme.shadows.md,
+    ...theme.shadows.medium,
   },
   summaryRow: {
     flexDirection: 'row',
@@ -392,11 +392,11 @@ const styles = StyleSheet.create({
     padding: theme.spacing.md,
   },
   transactionCard: {
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.surface,
     borderRadius: 12,
     padding: theme.spacing.md,
     marginBottom: theme.spacing.sm,
-    ...theme.shadows.sm,
+    ...theme.shadows.small,
   },
   transactionHeader: {
     flexDirection: 'row',

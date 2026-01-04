@@ -127,16 +127,16 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.sm,
   },
   emptySubtext: {
-    ...theme.typography.body,
+    ...theme.typography.body1,
     color: theme.colors.text.secondary,
     textAlign: 'center',
   },
   card: {
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.text.white,
     margin: theme.spacing.md,
     padding: theme.spacing.lg,
     borderRadius: 12,
-    ...theme.shadows.md,
+    ...theme.shadows.medium,
   },
   cardTitle: {
     ...theme.typography.h3,
@@ -160,11 +160,11 @@ const styles = StyleSheet.create({
     borderBottomColor: theme.colors.border,
   },
   label: {
-    ...theme.typography.body,
+    ...theme.typography.body1,
     color: theme.colors.text.secondary,
   },
   value: {
-    ...theme.typography.body,
+    ...theme.typography.body1,
     color: theme.colors.text.primary,
     fontWeight: '600',
   },
@@ -175,7 +175,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     ...theme.typography.caption,
-    color: theme.colors.white,
+    color: theme.colors.text.white,
     fontWeight: '600',
     textTransform: 'uppercase',
   },

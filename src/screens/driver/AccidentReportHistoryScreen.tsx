@@ -213,7 +213,7 @@ export default function AccidentReportHistoryScreen() {
 
       {/* New Report Button */}
       <TouchableOpacity style={styles.newReportButton} onPress={handleNewReport}>
-        <Ionicons name="add" size={24} color={theme.colors.white} />
+        <Ionicons name="add" size={24} color={theme.colors.text.white} />
         <Text style={styles.newReportText}>New Accident Report</Text>
       </TouchableOpacity>
     </View>
@@ -257,11 +257,11 @@ const styles = StyleSheet.create({
   },
   emptyState: {
     alignItems: 'center',
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.text.white,
     padding: theme.spacing.xl * 2,
     borderRadius: 12,
     marginTop: theme.spacing.xl,
-    ...theme.shadows.sm,
+    ...theme.shadows.small,
   },
   emptyTitle: {
     ...theme.typography.h3,
@@ -269,18 +269,18 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing.md,
   },
   emptyText: {
-    ...theme.typography.body,
+    ...theme.typography.body1,
     color: theme.colors.text.secondary,
     textAlign: 'center',
     marginTop: 8,
     lineHeight: 20,
   },
   reportCard: {
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.text.white,
     borderRadius: 12,
     padding: theme.spacing.md,
     marginBottom: theme.spacing.md,
-    ...theme.shadows.sm,
+    ...theme.shadows.small,
   },
   reportHeader: {
     flexDirection: 'row',
@@ -291,7 +291,7 @@ const styles = StyleSheet.create({
     marginLeft: 12,
   },
   reportDate: {
-    ...theme.typography.body,
+    ...theme.typography.body1,
     fontWeight: '600',
     color: theme.colors.text.primary,
   },
@@ -338,11 +338,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    ...theme.shadows.md,
+    ...theme.shadows.medium,
   },
   newReportText: {
     ...theme.typography.h4,
-    color: theme.colors.white,
+    color: theme.colors.text.white,
     fontWeight: '600',
   },
 });

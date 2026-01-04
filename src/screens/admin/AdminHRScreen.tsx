@@ -97,7 +97,7 @@ export default function AdminHRScreen() {
                 <Ionicons
                   name={type.icon as any}
                   size={24}
-                  color={leaveType === type.value ? theme.colors.white : theme.colors.admin.primary}
+                  color={leaveType === type.value ? theme.colors.text.white : theme.colors.admin.primary}
                 />
                 <Text style={[
                   styles.leaveTypeLabel,
@@ -166,7 +166,7 @@ export default function AdminHRScreen() {
           onPress={handleSubmit}
           disabled={submitting}
         >
-          <Ionicons name="send-outline" size={20} color={theme.colors.white} />
+          <Ionicons name="send-outline" size={20} color={theme.colors.text.white} />
           <Text style={styles.submitButtonText}>
             {submitting ? 'Submitting...' : 'Submit Request'}
           </Text>
@@ -220,16 +220,16 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   headerSubtitle: {
-    ...theme.typography.body,
+    ...theme.typography.body1,
     color: theme.colors.text.secondary,
     marginTop: theme.spacing.xs,
   },
   card: {
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.surface,
     margin: theme.spacing.md,
     padding: theme.spacing.lg,
     borderRadius: 12,
-    ...theme.shadows.md,
+    ...theme.shadows.medium,
   },
   cardTitle: {
     ...theme.typography.h3,
@@ -240,7 +240,7 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.lg,
   },
   label: {
-    ...theme.typography.body,
+    ...theme.typography.body1,
     color: theme.colors.text.primary,
     fontWeight: '600',
     marginBottom: theme.spacing.sm,
@@ -271,7 +271,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   leaveTypeLabelSelected: {
-    color: theme.colors.white,
+    color: theme.colors.text.white,
   },
   inputContainer: {
     flexDirection: 'row',
@@ -284,7 +284,7 @@ const styles = StyleSheet.create({
   },
   input: {
     flex: 1,
-    ...theme.typography.body,
+    ...theme.typography.body1,
     color: theme.colors.text.primary,
   },
   textArea: {
@@ -302,7 +302,7 @@ const styles = StyleSheet.create({
     gap: theme.spacing.sm,
   },
   durationText: {
-    ...theme.typography.body,
+    ...theme.typography.body1,
     color: theme.colors.admin.primary,
     fontWeight: '600',
   },
@@ -321,14 +321,14 @@ const styles = StyleSheet.create({
   },
   submitButtonText: {
     ...theme.typography.button,
-    color: theme.colors.white,
+    color: theme.colors.text.white,
   },
   infoCard: {
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.surface,
     margin: theme.spacing.md,
     padding: theme.spacing.lg,
     borderRadius: 12,
-    ...theme.shadows.sm,
+    ...theme.shadows.small,
   },
   infoHeader: {
     flexDirection: 'row',
@@ -349,12 +349,12 @@ const styles = StyleSheet.create({
     gap: theme.spacing.sm,
   },
   infoBullet: {
-    ...theme.typography.body,
+    ...theme.typography.body1,
     color: theme.colors.admin.primary,
     fontWeight: 'bold',
   },
   infoText: {
-    ...theme.typography.body,
+    ...theme.typography.body1,
     color: theme.colors.text.secondary,
     flex: 1,
     lineHeight: 20,

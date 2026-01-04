@@ -334,11 +334,11 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background,
   },
   card: {
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.text.white,
     margin: theme.spacing.md,
     padding: theme.spacing.lg,
     borderRadius: 12,
-    ...theme.shadows.md,
+    ...theme.shadows.medium,
   },
   cardTitle: {
     ...theme.typography.h3,
@@ -349,7 +349,7 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.lg,
   },
   label: {
-    ...theme.typography.body,
+    ...theme.typography.body1,
     color: theme.colors.text.primary,
     fontWeight: '600',
     marginBottom: theme.spacing.sm,
@@ -374,7 +374,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.driver.primary,
   },
   radioLabel: {
-    ...theme.typography.body,
+    ...theme.typography.body1,
     color: theme.colors.text.primary,
   },
   input: {
@@ -382,7 +382,7 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.border,
     borderRadius: 8,
     padding: theme.spacing.md,
-    ...theme.typography.body,
+    ...theme.typography.body1,
     color: theme.colors.text.primary,
   },
   dateInput: {
@@ -395,7 +395,7 @@ const styles = StyleSheet.create({
     gap: theme.spacing.sm,
   },
   dateText: {
-    ...theme.typography.body,
+    ...theme.typography.body1,
     color: theme.colors.text.primary,
     flex: 1,
   },
@@ -413,7 +413,7 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing.sm,
   },
   confirmButtonText: {
-    color: theme.colors.white,
+    color: theme.colors.text.white,
     fontWeight: '600',
   },
   signatureButton: {
@@ -455,7 +455,7 @@ const styles = StyleSheet.create({
   },
   signatureModal: {
     flex: 1,
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.text.white,
   },
   signatureHeader: {
     flexDirection: 'row',
@@ -497,7 +497,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.driver.primary,
   },
   confirmActionText: {
-    color: theme.colors.white,
+    color: theme.colors.text.white,
     fontWeight: '600',
   },
   submitButton: {
@@ -512,7 +512,7 @@ const styles = StyleSheet.create({
   },
   submitButtonText: {
     ...theme.typography.button,
-    color: theme.colors.white,
+    color: theme.colors.text.white,
   },
   infoCard: {
     backgroundColor: theme.colors.driver.light,
@@ -526,7 +526,7 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.md,
   },
   infoText: {
-    ...theme.typography.body,
+    ...theme.typography.body1,
     color: theme.colors.text.secondary,
     marginBottom: theme.spacing.sm,
     lineHeight: 20,

@@ -271,11 +271,11 @@ const styles = StyleSheet.create({
   },
   summaryCard: {
     flex: 1,
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.text.white,
     padding: theme.spacing.lg,
     borderRadius: 12,
     alignItems: 'center',
-    ...theme.shadows.sm,
+    ...theme.shadows.small,
   },
   pendingCard: {
     borderLeftWidth: 4,
@@ -317,10 +317,10 @@ const styles = StyleSheet.create({
   },
   emptyState: {
     alignItems: 'center',
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.text.white,
     padding: theme.spacing.xl * 2,
     borderRadius: 12,
-    ...theme.shadows.sm,
+    ...theme.shadows.small,
   },
   emptyTitle: {
     ...theme.typography.h3,
@@ -328,17 +328,17 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing.md,
   },
   emptyText: {
-    ...theme.typography.body,
+    ...theme.typography.body1,
     color: theme.colors.text.secondary,
     textAlign: 'center',
     marginTop: 8,
   },
   fineCard: {
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.text.white,
     borderRadius: 12,
     padding: theme.spacing.md,
     marginBottom: theme.spacing.md,
-    ...theme.shadows.sm,
+    ...theme.shadows.small,
   },
   fineHeader: {
     flexDirection: 'row',
@@ -357,7 +357,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   fineType: {
-    ...theme.typography.body,
+    ...theme.typography.body1,
     fontWeight: '600',
     color: theme.colors.text.primary,
   },
@@ -429,8 +429,8 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   payButtonText: {
-    ...theme.typography.body,
-    color: theme.colors.white,
+    ...theme.typography.body1,
+    color: theme.colors.text.white,
     fontWeight: '600',
   },
   legend: {

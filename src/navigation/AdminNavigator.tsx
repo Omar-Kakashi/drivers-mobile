@@ -12,6 +12,7 @@ import AdminDashboardScreen from '../screens/admin/AdminDashboardScreen';
 import NotificationsScreen from '../screens/admin/NotificationsScreen';
 import RequestsScreen from '../screens/admin/RequestsScreen';
 import AdminHRScreen from '../screens/admin/AdminHRScreen';
+import AdminProfileScreen from '../screens/admin/AdminProfileScreen';
 
 const Tab = createBottomTabNavigator();
 
@@ -53,6 +54,13 @@ export default function AdminNavigator() {
         component={AdminHRScreen}
         options={{
           tabBarIcon: ({ color, size }) => <Ionicons name="document-text" size={size} color={color} />,
+        }}
+      />
+      <Tab.Screen
+        name="Profile"
+        component={AdminProfileScreen}
+        options={{
+          tabBarIcon: ({ color, size }) => <Ionicons name="person" size={size} color={color} />,
         }}
       />
     </Tab.Navigator>

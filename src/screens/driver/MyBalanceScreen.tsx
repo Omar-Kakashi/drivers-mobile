@@ -155,12 +155,12 @@ export default function MyBalanceScreen() {
           navigation.navigate('ShareAdjustmentRequest');
         }}
       >
-        <MaterialCommunityIcons name="file-document-edit" size={24} color={theme.colors.white} />
+        <MaterialCommunityIcons name="file-document-edit" size={24} color={theme.colors.text.white} />
         <View style={styles.adjustmentButtonContent}>
           <Text style={styles.adjustmentButtonTitle}>Request Share Adjustment</Text>
           <Text style={styles.adjustmentButtonSubtitle}>For workshop days, accidents, etc.</Text>
         </View>
-        <Ionicons name="chevron-forward" size={24} color={theme.colors.white} />
+        <Ionicons name="chevron-forward" size={24} color={theme.colors.text.white} />
       </TouchableOpacity>
 
       <View style={{ height: 20 }} />
@@ -182,23 +182,23 @@ const styles = StyleSheet.create({
     ...theme.shadows.lg,
   },
   balanceLabel: {
-    ...theme.typography.body,
-    color: theme.colors.white,
+    ...theme.typography.body1,
+    color: theme.colors.text.white,
     opacity: 0.9,
     marginBottom: theme.spacing.sm,
   },
   balanceAmount: {
     ...theme.typography.h1,
-    color: theme.colors.white,
+    color: theme.colors.text.white,
     fontWeight: 'bold',
   },
   card: {
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.text.white,
     marginHorizontal: theme.spacing.md,
     marginBottom: theme.spacing.md,
     padding: theme.spacing.lg,
     borderRadius: 12,
-    ...theme.shadows.md,
+    ...theme.shadows.medium,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -233,7 +233,7 @@ const styles = StyleSheet.create({
     borderBottomColor: theme.colors.border,
   },
   summaryLabel: {
-    ...theme.typography.body,
+    ...theme.typography.body1,
     color: theme.colors.text.secondary,
   },
   summaryValue: {
@@ -248,7 +248,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   infoText: {
-    ...theme.typography.body,
+    ...theme.typography.body1,
     color: theme.colors.text.secondary,
     textAlign: 'center',
     lineHeight: 20,
@@ -261,7 +261,7 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.md,
     padding: theme.spacing.lg,
     borderRadius: 12,
-    ...theme.shadows.md,
+    ...theme.shadows.medium,
   },
   adjustmentButtonContent: {
     flex: 1,
@@ -269,12 +269,12 @@ const styles = StyleSheet.create({
   },
   adjustmentButtonTitle: {
     ...theme.typography.h4,
-    color: theme.colors.white,
+    color: theme.colors.text.white,
     fontWeight: '600',
   },
   adjustmentButtonSubtitle: {
     ...theme.typography.caption,
-    color: theme.colors.white,
+    color: theme.colors.text.white,
     opacity: 0.8,
     marginTop: 2,
   },

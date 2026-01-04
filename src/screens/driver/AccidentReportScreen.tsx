@@ -296,7 +296,7 @@ export default function AccidentReportScreen() {
             <Image source={{ uri: document.uri }} style={styles.preview} />
             {isUploading && (
               <View style={styles.uploadingOverlay}>
-                <ActivityIndicator size="small" color={theme.colors.white} />
+                <ActivityIndicator size="small" color={theme.colors.text.white} />
                 <Text style={styles.uploadingText}>Uploading...</Text>
               </View>
             )}
@@ -442,7 +442,7 @@ export default function AccidentReportScreen() {
               )}
               {uploading === 'accident_report' && (
                 <View style={styles.uploadingOverlay}>
-                  <ActivityIndicator size="small" color={theme.colors.white} />
+                  <ActivityIndicator size="small" color={theme.colors.text.white} />
                   <Text style={styles.uploadingText}>Uploading...</Text>
                 </View>
               )}
@@ -484,10 +484,10 @@ export default function AccidentReportScreen() {
         disabled={submitting || !!uploading}
       >
         {submitting ? (
-          <ActivityIndicator size="small" color={theme.colors.white} />
+          <ActivityIndicator size="small" color={theme.colors.text.white} />
         ) : (
           <>
-            <Ionicons name="send" size={20} color={theme.colors.white} />
+            <Ionicons name="send" size={20} color={theme.colors.text.white} />
             <Text style={styles.submitText}>Submit Accident Report</Text>
           </>
         )}
@@ -528,7 +528,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   infoText: {
-    ...theme.typography.body,
+    ...theme.typography.body1,
     color: theme.colors.text.secondary,
     lineHeight: 20,
   },
@@ -569,11 +569,11 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
   documentCard: {
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.text.white,
     padding: theme.spacing.md,
     borderRadius: 12,
     marginBottom: theme.spacing.sm,
-    ...theme.shadows.sm,
+    ...theme.shadows.small,
   },
   documentHeader: {
     flexDirection: 'row',
@@ -581,7 +581,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   documentTitle: {
-    ...theme.typography.body,
+    ...theme.typography.body1,
     fontWeight: '600',
     color: theme.colors.text.primary,
   },
@@ -649,14 +649,14 @@ const styles = StyleSheet.create({
   },
   uploadingText: {
     ...theme.typography.caption,
-    color: theme.colors.white,
+    color: theme.colors.text.white,
     marginTop: 4,
   },
   removeButton: {
     position: 'absolute',
     top: 8,
     right: 8,
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.text.white,
     borderRadius: 14,
   },
   submitButton: {
@@ -667,14 +667,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    ...theme.shadows.md,
+    ...theme.shadows.medium,
   },
   submitButtonDisabled: {
     backgroundColor: theme.colors.text.secondary,
   },
   submitText: {
     ...theme.typography.h4,
-    color: theme.colors.white,
+    color: theme.colors.text.white,
     fontWeight: '600',
   },
 });

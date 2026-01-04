@@ -164,10 +164,10 @@ export default function NOCRequestScreen() {
         disabled={submitting}
       >
         {submitting ? (
-          <ActivityIndicator size="small" color={theme.colors.white} />
+          <ActivityIndicator size="small" color={theme.colors.text.white} />
         ) : (
           <>
-            <Ionicons name="send" size={20} color={theme.colors.white} />
+            <Ionicons name="send" size={20} color={theme.colors.text.white} />
             <Text style={styles.submitText}>Submit NOC Request</Text>
           </>
         )}
@@ -217,7 +217,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   infoText: {
-    ...theme.typography.body,
+    ...theme.typography.body1,
     color: theme.colors.text.secondary,
     lineHeight: 20,
   },
@@ -230,7 +230,7 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.md,
   },
   label: {
-    ...theme.typography.body,
+    ...theme.typography.body1,
     color: theme.colors.text.primary,
     marginBottom: theme.spacing.sm,
     fontWeight: '500',
@@ -239,10 +239,10 @@ const styles = StyleSheet.create({
     color: theme.colors.error,
   },
   input: {
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.text.white,
     borderRadius: 12,
     padding: theme.spacing.md,
-    ...theme.typography.body,
+    ...theme.typography.body1,
     color: theme.colors.text.primary,
     borderWidth: 1,
     borderColor: theme.colors.border,
@@ -255,7 +255,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.text.white,
     padding: theme.spacing.md,
     borderRadius: 8,
     marginBottom: 8,
@@ -268,7 +268,7 @@ const styles = StyleSheet.create({
     color: theme.colors.text.secondary,
   },
   requestDetail: {
-    ...theme.typography.body,
+    ...theme.typography.body1,
     color: theme.colors.text.primary,
     fontWeight: '500',
   },
@@ -279,7 +279,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     ...theme.typography.caption,
-    color: theme.colors.white,
+    color: theme.colors.text.white,
     fontWeight: '600',
     textTransform: 'capitalize',
   },
@@ -291,14 +291,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    ...theme.shadows.md,
+    ...theme.shadows.medium,
   },
   submitButtonDisabled: {
     backgroundColor: theme.colors.text.secondary,
   },
   submitText: {
     ...theme.typography.h4,
-    color: theme.colors.white,
+    color: theme.colors.text.white,
     fontWeight: '600',
   },
 });

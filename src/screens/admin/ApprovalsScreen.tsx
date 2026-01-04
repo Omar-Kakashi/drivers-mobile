@@ -231,7 +231,7 @@ export default function ApprovalsScreen() {
               onPress={() => handleReject(request.id)}
               disabled={processing === request.id}
             >
-              <Ionicons name="close-circle" size={20} color={theme.colors.white} />
+              <Ionicons name="close-circle" size={20} color={theme.colors.text.white} />
               <Text style={styles.buttonText}>Reject</Text>
             </TouchableOpacity>
 
@@ -240,7 +240,7 @@ export default function ApprovalsScreen() {
               onPress={() => handleApprove(request.id)}
               disabled={processing === request.id}
             >
-              <Ionicons name="checkmark-circle" size={20} color={theme.colors.white} />
+              <Ionicons name="checkmark-circle" size={20} color={theme.colors.text.white} />
               <Text style={styles.buttonText}>
                 {processing === request.id ? 'Processing...' : 'Approve'}
               </Text>
@@ -268,7 +268,7 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background,
   },
   header: {
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.text.white,
     padding: theme.spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
@@ -289,16 +289,16 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing.md,
   },
   emptySubtext: {
-    ...theme.typography.body,
+    ...theme.typography.body1,
     color: theme.colors.text.secondary,
     marginTop: theme.spacing.sm,
   },
   requestCard: {
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.text.white,
     margin: theme.spacing.md,
     padding: theme.spacing.lg,
     borderRadius: 12,
-    ...theme.shadows.md,
+    ...theme.shadows.medium,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -323,7 +323,7 @@ const styles = StyleSheet.create({
   },
   leaveTypeText: {
     ...theme.typography.caption,
-    color: theme.colors.white,
+    color: theme.colors.text.white,
     fontWeight: '600',
   },
   divider: {
@@ -340,13 +340,13 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.sm,
   },
   detailLabel: {
-    ...theme.typography.body,
+    ...theme.typography.body1,
     color: theme.colors.text.secondary,
     marginLeft: theme.spacing.sm,
     marginRight: theme.spacing.xs,
   },
   detailValue: {
-    ...theme.typography.body,
+    ...theme.typography.body1,
     color: theme.colors.text.primary,
     fontWeight: '600',
   },
@@ -363,7 +363,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   reasonText: {
-    ...theme.typography.body,
+    ...theme.typography.body1,
     color: theme.colors.text.primary,
     lineHeight: 20,
   },
@@ -396,7 +396,7 @@ const styles = StyleSheet.create({
   },
   buttonText: {
     ...theme.typography.button,
-    color: theme.colors.white,
+    color: theme.colors.text.white,
   },
   submittedText: {
     ...theme.typography.caption,

@@ -179,13 +179,13 @@ const styles = StyleSheet.create({
     backgroundColor: theme.colors.background,
   },
   header: {
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.text.white,
     padding: theme.spacing.md,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
   },
   headerText: {
-    ...theme.typography.body,
+    ...theme.typography.body1,
     color: theme.colors.text.secondary,
     fontWeight: '600',
   },
@@ -200,20 +200,20 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing.md,
   },
   emptySubtext: {
-    ...theme.typography.body,
+    ...theme.typography.body1,
     color: theme.colors.text.secondary,
     marginTop: theme.spacing.sm,
   },
   notificationCard: {
     flexDirection: 'row',
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.text.white,
     marginHorizontal: theme.spacing.md,
     marginTop: theme.spacing.md,
     padding: theme.spacing.md,
     borderRadius: 12,
     borderLeftWidth: 3,
     borderLeftColor: 'transparent',
-    ...theme.shadows.sm,
+    ...theme.shadows.small,
   },
   unreadCard: {
     borderLeftColor: theme.colors.admin.primary,
@@ -237,7 +237,7 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.xs,
   },
   title: {
-    ...theme.typography.body,
+    ...theme.typography.body1,
     color: theme.colors.text.primary,
     fontWeight: '600',
     flex: 1,
@@ -253,7 +253,7 @@ const styles = StyleSheet.create({
     marginLeft: theme.spacing.sm,
   },
   message: {
-    ...theme.typography.body,
+    ...theme.typography.body1,
     color: theme.colors.text.secondary,
     marginBottom: theme.spacing.sm,
   },

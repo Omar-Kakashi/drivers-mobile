@@ -326,7 +326,7 @@ export default function ShareAdjustmentRequestScreen() {
               <MaterialCommunityIcons
                 name={reason.icon as any}
                 size={32}
-                color={selectedReason === reason.id ? theme.colors.white : theme.colors.driver.primary}
+                color={selectedReason === reason.id ? theme.colors.text.white : theme.colors.driver.primary}
               />
               <Text
                 style={[
@@ -459,14 +459,14 @@ export default function ShareAdjustmentRequestScreen() {
       >
         {(submitting || uploading) ? (
           <>
-            <ActivityIndicator size="small" color={theme.colors.white} />
+            <ActivityIndicator size="small" color={theme.colors.text.white} />
             <Text style={styles.submitText}>
               {uploading ? 'Uploading Photo...' : 'Submitting...'}
             </Text>
           </>
         ) : (
           <>
-            <Ionicons name="send" size={20} color={theme.colors.white} />
+            <Ionicons name="send" size={20} color={theme.colors.text.white} />
             <Text style={styles.submitText}>Submit Request</Text>
           </>
         )}
@@ -513,16 +513,16 @@ const styles = StyleSheet.create({
   },
   infoText: {
     flex: 1,
-    ...theme.typography.body,
+    ...theme.typography.body1,
     color: theme.colors.text.secondary,
     lineHeight: 20,
   },
   assignmentCard: {
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.text.white,
     padding: theme.spacing.md,
     borderRadius: 12,
     marginBottom: theme.spacing.md,
-    ...theme.shadows.sm,
+    ...theme.shadows.small,
   },
   assignmentRow: {
     flexDirection: 'row',
@@ -532,11 +532,11 @@ const styles = StyleSheet.create({
     borderBottomColor: theme.colors.border,
   },
   assignmentLabel: {
-    ...theme.typography.body,
+    ...theme.typography.body1,
     color: theme.colors.text.secondary,
   },
   assignmentValue: {
-    ...theme.typography.body,
+    ...theme.typography.body1,
     fontWeight: '600',
     color: theme.colors.text.primary,
   },
@@ -551,7 +551,7 @@ const styles = StyleSheet.create({
   },
   warningText: {
     flex: 1,
-    ...theme.typography.body,
+    ...theme.typography.body1,
     color: '#92400E',
   },
   section: {
@@ -577,13 +577,13 @@ const styles = StyleSheet.create({
   },
   reasonCard: {
     width: '47%',
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.text.white,
     padding: theme.spacing.md,
     borderRadius: 12,
     alignItems: 'center',
     borderWidth: 2,
     borderColor: theme.colors.border,
-    ...theme.shadows.sm,
+    ...theme.shadows.small,
   },
   reasonCardSelected: {
     backgroundColor: theme.colors.driver.primary,
@@ -596,7 +596,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   reasonTextSelected: {
-    color: theme.colors.white,
+    color: theme.colors.text.white,
     fontWeight: '600',
   },
   daysContainer: {
@@ -608,7 +608,7 @@ const styles = StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.text.white,
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 2,
@@ -623,10 +623,10 @@ const styles = StyleSheet.create({
     color: theme.colors.text.primary,
   },
   dayTextSelected: {
-    color: theme.colors.white,
+    color: theme.colors.text.white,
   },
   totalText: {
-    ...theme.typography.body,
+    ...theme.typography.body1,
     color: theme.colors.text.secondary,
     textAlign: 'center',
   },
@@ -641,7 +641,7 @@ const styles = StyleSheet.create({
   },
   photoButton: {
     flex: 1,
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.text.white,
     padding: theme.spacing.lg,
     borderRadius: 12,
     alignItems: 'center',
@@ -669,15 +669,15 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 8,
     right: 8,
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.text.white,
     borderRadius: 14,
   },
   notesInput: {
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.text.white,
     borderRadius: 12,
     padding: theme.spacing.md,
     minHeight: 100,
-    ...theme.typography.body,
+    ...theme.typography.body1,
     color: theme.colors.text.primary,
     borderWidth: 1,
     borderColor: theme.colors.border,
@@ -686,7 +686,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.text.white,
     padding: theme.spacing.md,
     borderRadius: 8,
     marginBottom: 8,
@@ -699,7 +699,7 @@ const styles = StyleSheet.create({
     color: theme.colors.text.secondary,
   },
   requestReason: {
-    ...theme.typography.body,
+    ...theme.typography.body1,
     color: theme.colors.text.primary,
     fontWeight: '500',
   },
@@ -707,7 +707,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   requestDays: {
-    ...theme.typography.body,
+    ...theme.typography.body1,
     fontWeight: '600',
     color: theme.colors.text.primary,
     marginBottom: 4,
@@ -719,7 +719,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     ...theme.typography.caption,
-    color: theme.colors.white,
+    color: theme.colors.text.white,
     fontWeight: '600',
     textTransform: 'capitalize',
   },
@@ -731,14 +731,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    ...theme.shadows.md,
+    ...theme.shadows.medium,
   },
   submitButtonDisabled: {
     backgroundColor: theme.colors.text.secondary,
   },
   submitText: {
     ...theme.typography.h4,
-    color: theme.colors.white,
+    color: theme.colors.text.white,
     fontWeight: '600',
   },
 });

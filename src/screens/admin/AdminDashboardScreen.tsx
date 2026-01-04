@@ -239,9 +239,14 @@ export default function AdminDashboardScreen() {
           <Text style={styles.name}>{user?.name}</Text>
           <Text style={styles.role}>{user?.role?.replace('_', ' ').toUpperCase()}</Text>
         </View>
-        <TouchableOpacity onPress={logout} style={styles.logoutButton}>
-          <Ionicons name="log-out-outline" size={24} color={theme.colors.error} />
-        </TouchableOpacity>
+        <View style={styles.headerActions}>
+          <TouchableOpacity onPress={() => navigateToTab('Profile')} style={styles.headerButton}>
+            <Ionicons name="person-circle-outline" size={28} color={theme.colors.admin.primary} />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={logout} style={styles.headerButton}>
+            <Ionicons name="log-out-outline" size={24} color={theme.colors.error} />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <View style={styles.statsGrid}>
@@ -249,7 +254,7 @@ export default function AdminDashboardScreen() {
           style={[styles.statCard, { backgroundColor: theme.colors.admin.primary }]}
           onPress={() => navigateToTab('Notifications')}
         >
-          <Ionicons name="notifications-outline" size={32} color={theme.colors.white} />
+          <Ionicons name="notifications-outline" size={32} color={theme.colors.text.white} />
           <Text style={styles.statValue}>{stats.notifications}</Text>
           <Text style={styles.statLabel}>Unread</Text>
         </TouchableOpacity>
@@ -258,7 +263,7 @@ export default function AdminDashboardScreen() {
           style={[styles.statCard, { backgroundColor: theme.colors.warning }]}
           onPress={() => navigateToTab('Requests')}
         >
-          <Ionicons name="time-outline" size={32} color={theme.colors.white} />
+          <Ionicons name="time-outline" size={32} color={theme.colors.text.white} />
           <Text style={styles.statValue}>{totalPending}</Text>
           <Text style={styles.statLabel}>Pending</Text>
         </TouchableOpacity>
@@ -467,7 +472,7 @@ export default function AdminDashboardScreen() {
                 disabled={submitting}
               >
                 {submitting ? (
-                  <ActivityIndicator color={theme.colors.white} />
+                  <ActivityIndicator color={theme.colors.text.white} />
                 ) : (
                   <Text style={styles.submitButtonText}>Submit Request</Text>
                 )}
@@ -584,12 +589,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: theme.spacing.lg,
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.surface,
     borderBottomWidth: 1,
     borderBottomColor: theme.colors.border,
   },
   greeting: {
-    ...theme.typography.body,
+    ...theme.typography.body1,
     color: theme.colors.text.secondary,
   },
   name: {
@@ -597,7 +602,12 @@ const styles = StyleSheet.create({
     color: theme.colors.text.primary,
     fontWeight: 'bold',
   },
-  logoutButton: {
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: theme.spacing.sm,
+  },
+  headerButton: {
     padding: theme.spacing.sm,
   },
   statsGrid: {
@@ -610,17 +620,17 @@ const styles = StyleSheet.create({
     padding: theme.spacing.lg,
     borderRadius: 12,
     alignItems: 'center',
-    ...theme.shadows.md,
+    ...theme.shadows.medium,
   },
   statValue: {
     ...theme.typography.h1,
-    color: theme.colors.white,
+    color: theme.colors.text.white,
     fontWeight: 'bold',
     marginTop: theme.spacing.sm,
   },
   statLabel: {
     ...theme.typography.caption,
-    color: theme.colors.white,
+    color: theme.colors.text.white,
     opacity: 0.9,
     marginTop: theme.spacing.xs,
   },
@@ -632,11 +642,11 @@ const styles = StyleSheet.create({
   },
   fleetStatCard: {
     flex: 1,
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.surface,
     padding: theme.spacing.md,
     borderRadius: 12,
     alignItems: 'center',
-    ...theme.shadows.md,
+    ...theme.shadows.medium,
   },
   fleetStatValue: {
     ...theme.typography.h2,
@@ -650,11 +660,11 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   card: {
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.surface,
     margin: theme.spacing.md,
     padding: theme.spacing.lg,
     borderRadius: 12,
-    ...theme.shadows.md,
+    ...theme.shadows.medium,
   },
   cardTitle: {
     ...theme.typography.h3,
@@ -669,7 +679,7 @@ const styles = StyleSheet.create({
     borderBottomColor: theme.colors.border,
   },
   actionText: {
-    ...theme.typography.body,
+    ...theme.typography.body1,
     color: theme.colors.text.primary,
     flex: 1,
     marginLeft: theme.spacing.md,
@@ -684,7 +694,7 @@ const styles = StyleSheet.create({
     gap: theme.spacing.md,
   },
   infoText: {
-    ...theme.typography.body,
+    ...theme.typography.body1,
     color: theme.colors.text.secondary,
     flex: 1,
   },
@@ -697,7 +707,7 @@ const styles = StyleSheet.create({
   pendingBreakdown: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.surface,
     marginHorizontal: theme.spacing.md,
     marginBottom: theme.spacing.md,
     padding: theme.spacing.md,
@@ -732,7 +742,7 @@ const styles = StyleSheet.create({
     marginRight: 8,
   },
   badgeText: {
-    color: theme.colors.white,
+    color: theme.colors.text.white,
     fontSize: 12,
     fontWeight: 'bold',
   },
@@ -743,7 +753,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.surface,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '90%',
@@ -773,7 +783,7 @@ const styles = StyleSheet.create({
     borderTopColor: theme.colors.border,
   },
   inputLabel: {
-    ...theme.typography.body,
+    ...theme.typography.body1,
     color: theme.colors.text.primary,
     fontWeight: '600',
     marginBottom: 6,
@@ -784,7 +794,7 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.border,
     borderRadius: 8,
     padding: theme.spacing.md,
-    ...theme.typography.body,
+    ...theme.typography.body1,
   },
   textArea: {
     height: 80,
@@ -809,7 +819,7 @@ const styles = StyleSheet.create({
     marginTop: theme.spacing.md,
   },
   totalLabel: {
-    ...theme.typography.body,
+    ...theme.typography.body1,
     color: theme.colors.success,
     fontWeight: '600',
   },
@@ -827,7 +837,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   cancelButtonText: {
-    ...theme.typography.body,
+    ...theme.typography.body1,
     color: theme.colors.text.secondary,
     fontWeight: '600',
   },
@@ -839,8 +849,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   submitButtonText: {
-    ...theme.typography.body,
-    color: theme.colors.white,
+    ...theme.typography.body1,
+    color: theme.colors.text.white,
     fontWeight: '600',
   },
   disabledButton: {
@@ -855,15 +865,15 @@ const styles = StyleSheet.create({
     borderColor: theme.colors.border,
     borderRadius: 8,
     padding: theme.spacing.md,
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.surface,
   },
   selectorText: {
-    ...theme.typography.body,
+    ...theme.typography.body1,
     color: theme.colors.text.primary,
     flex: 1,
   },
   selectorPlaceholder: {
-    ...theme.typography.body,
+    ...theme.typography.body1,
     color: theme.colors.text.secondary,
     flex: 1,
   },
@@ -873,7 +883,7 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   selectorModalContent: {
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.surface,
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
     maxHeight: '60%',
@@ -906,7 +916,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   selectorItemText: {
-    ...theme.typography.body,
+    ...theme.typography.body1,
     color: theme.colors.text.primary,
     fontWeight: '500',
   },
@@ -916,7 +926,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   emptyText: {
-    ...theme.typography.body,
+    ...theme.typography.body1,
     color: theme.colors.text.secondary,
     textAlign: 'center',
     padding: theme.spacing.xl,

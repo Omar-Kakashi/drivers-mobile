@@ -279,10 +279,10 @@ export default function LoanCertificateScreen() {
         disabled={submitting}
       >
         {submitting ? (
-          <ActivityIndicator size="small" color={theme.colors.white} />
+          <ActivityIndicator size="small" color={theme.colors.text.white} />
         ) : (
           <>
-            <Ionicons name="send" size={20} color={theme.colors.white} />
+            <Ionicons name="send" size={20} color={theme.colors.text.white} />
             <Text style={styles.submitText}>Submit Request</Text>
           </>
         )}
@@ -332,7 +332,7 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   infoText: {
-    ...theme.typography.body,
+    ...theme.typography.body1,
     color: theme.colors.text.secondary,
     lineHeight: 20,
   },
@@ -355,7 +355,7 @@ const styles = StyleSheet.create({
   },
   amountButton: {
     width: '31%',
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.text.white,
     padding: theme.spacing.md,
     borderRadius: 12,
     alignItems: 'center',
@@ -371,7 +371,7 @@ const styles = StyleSheet.create({
     color: theme.colors.text.primary,
   },
   amountTextSelected: {
-    color: theme.colors.white,
+    color: theme.colors.text.white,
   },
   orText: {
     ...theme.typography.caption,
@@ -380,10 +380,10 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.sm,
   },
   input: {
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.text.white,
     borderRadius: 12,
     padding: theme.spacing.md,
-    ...theme.typography.body,
+    ...theme.typography.body1,
     color: theme.colors.text.primary,
     borderWidth: 1,
     borderColor: theme.colors.border,
@@ -400,7 +400,7 @@ const styles = StyleSheet.create({
   termButton: {
     flex: 1,
     minWidth: '45%',
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.text.white,
     padding: theme.spacing.md,
     borderRadius: 12,
     alignItems: 'center',
@@ -412,12 +412,12 @@ const styles = StyleSheet.create({
     borderColor: '#EF4444',
   },
   termText: {
-    ...theme.typography.body,
+    ...theme.typography.body1,
     color: theme.colors.text.primary,
     fontWeight: '500',
   },
   termTextSelected: {
-    color: theme.colors.white,
+    color: theme.colors.text.white,
   },
   summaryCard: {
     flexDirection: 'row',
@@ -428,7 +428,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   summaryLabel: {
-    ...theme.typography.body,
+    ...theme.typography.body1,
     color: theme.colors.text.secondary,
   },
   summaryValue: {
@@ -440,7 +440,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.text.white,
     padding: theme.spacing.md,
     borderRadius: 8,
     marginBottom: 8,
@@ -453,7 +453,7 @@ const styles = StyleSheet.create({
     color: theme.colors.text.secondary,
   },
   requestDetail: {
-    ...theme.typography.body,
+    ...theme.typography.body1,
     color: theme.colors.text.primary,
     fontWeight: '500',
   },
@@ -464,7 +464,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     ...theme.typography.caption,
-    color: theme.colors.white,
+    color: theme.colors.text.white,
     fontWeight: '600',
     textTransform: 'capitalize',
   },
@@ -476,14 +476,14 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 8,
-    ...theme.shadows.md,
+    ...theme.shadows.medium,
   },
   submitButtonDisabled: {
     backgroundColor: theme.colors.text.secondary,
   },
   submitText: {
     ...theme.typography.h4,
-    color: theme.colors.white,
+    color: theme.colors.text.white,
     fontWeight: '600',
   },
 });

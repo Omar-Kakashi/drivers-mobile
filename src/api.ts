@@ -469,6 +469,36 @@ class BackendAPI {
     return data;
   }
 
+  /**
+   * Get pending HR requests for admin approval
+   * Filters by request type (early_leave, noc, passport_handover, etc.)
+   */
+  async getPendingHRRequests(requestType?: string): Promise<any[]> {
+    const { data } = await this.client.get('/hr-requests/pending', { 
+      params: { request_type: requestType } 
+    });
+    return data;
+  }
+
+  /**
+   * Approve an HR request (early leave, NOC, passport, etc.)
+   */
+  async approveHRRequest(requestId: string, approvedBy: string): Promise<void> {
+    await this.client.put(`/hr-requests/${requestId}/approve`, {
+      approved_by: approvedBy
+    });
+  }
+
+  /**
+   * Reject an HR request with reason
+   */
+  async rejectHRRequest(requestId: string, reason: string, rejectedBy: string): Promise<void> {
+    await this.client.put(`/hr-requests/${requestId}/reject`, {
+      reason: reason,
+      rejected_by: rejectedBy
+    });
+  }
+
   // ==================== SETTLEMENTS ====================
 
   async getSettlements(params: {

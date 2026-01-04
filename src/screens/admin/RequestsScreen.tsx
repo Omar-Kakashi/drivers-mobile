@@ -33,7 +33,7 @@ import { useAuthStore } from '../../stores/authStore';
 import { backendAPI } from '../../api';
 
 // Request type definitions
-type RequestType = 'all' | 'leave' | 'share_adjustment' | 'noc' | 'salary_cert' | 'loan' | 'exit_permit';
+type RequestType = 'all' | 'leave' | 'share_adjustment' | 'early_leave' | 'noc' | 'salary_cert' | 'loan' | 'exit_permit' | 'passport';
 
 interface BaseRequest {
   id: string;
@@ -43,6 +43,7 @@ interface BaseRequest {
   status: string;
   created_at: string;
   reason?: string;
+  data?: Record<string, any>; // For HR requests with extra data
 }
 
 interface LeaveRequest extends BaseRequest {
@@ -64,13 +65,22 @@ interface ShareAdjustmentRequest extends BaseRequest {
   job_card_picture_url?: string;
 }
 
-type AnyRequest = LeaveRequest | ShareAdjustmentRequest | BaseRequest;
+interface EarlyLeaveRequest extends BaseRequest {
+  type: 'early_leave';
+  departure_time: string;
+  date: string;
+}
+
+type AnyRequest = LeaveRequest | ShareAdjustmentRequest | EarlyLeaveRequest | BaseRequest;
 
 // Filter tabs
 const REQUEST_FILTERS: { key: RequestType; label: string; icon: string }[] = [
   { key: 'all', label: 'All', icon: 'list' },
   { key: 'leave', label: 'Leave', icon: 'calendar' },
   { key: 'share_adjustment', label: 'Share', icon: 'cash' },
+  { key: 'early_leave', label: 'Early Leave', icon: 'time' },
+  { key: 'noc', label: 'NOC', icon: 'document-text' },
+  { key: 'passport', label: 'Passport', icon: 'card' },
 ];
 
 export default function RequestsScreen() {
@@ -136,6 +146,62 @@ export default function RequestsScreen() {
         console.warn('Failed to load share adjustments:', err);
       }
       
+      // Load Early Leave Requests (pending) via HR Requests API
+      try {
+        const earlyLeaveRequests = await backendAPI.getPendingHRRequests('early_leave');
+        const mappedEarlyLeave: EarlyLeaveRequest[] = earlyLeaveRequests.map((r: any) => ({
+          id: r.id,
+          type: 'early_leave' as const,
+          requester_name: r.requester_name || r.user_name || 'Unknown',
+          requester_type: r.user_type || 'driver',
+          status: r.status,
+          created_at: r.created_at,
+          reason: r.data?.reason || r.reason,
+          data: r.data,
+          departure_time: r.data?.departure_time || '',
+          date: r.data?.date || '',
+        }));
+        allRequests.push(...mappedEarlyLeave);
+      } catch (err) {
+        console.warn('Failed to load early leave requests:', err);
+      }
+      
+      // Load NOC Requests (pending)
+      try {
+        const nocRequests = await backendAPI.getPendingHRRequests('noc');
+        const mappedNoc: BaseRequest[] = nocRequests.map((r: any) => ({
+          id: r.id,
+          type: 'noc' as const,
+          requester_name: r.requester_name || r.user_name || 'Unknown',
+          requester_type: r.user_type || 'driver',
+          status: r.status,
+          created_at: r.created_at,
+          reason: r.data?.purpose || r.reason,
+          data: r.data,
+        }));
+        allRequests.push(...mappedNoc);
+      } catch (err) {
+        console.warn('Failed to load NOC requests:', err);
+      }
+      
+      // Load Passport Handover Requests (pending)
+      try {
+        const passportRequests = await backendAPI.getPendingHRRequests('passport_handover');
+        const mappedPassport: BaseRequest[] = passportRequests.map((r: any) => ({
+          id: r.id,
+          type: 'passport' as const,
+          requester_name: r.requester_name || r.user_name || 'Unknown',
+          requester_type: r.user_type || 'driver',
+          status: r.status,
+          created_at: r.created_at,
+          reason: r.data?.reason || r.reason,
+          data: r.data,
+        }));
+        allRequests.push(...mappedPassport);
+      } catch (err) {
+        console.warn('Failed to load passport requests:', err);
+      }
+      
       // Sort by created_at (newest first)
       allRequests.sort((a, b) => 
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
@@ -193,6 +259,9 @@ export default function RequestsScreen() {
                   user?.id || '',
                   userRole
                 );
+              } else if (['early_leave', 'noc', 'passport'].includes(request.type)) {
+                // Generic HR request approval
+                await backendAPI.approveHRRequest(request.id, user?.id || '');
               }
               
               Toast.show({
@@ -238,6 +307,9 @@ export default function RequestsScreen() {
         await backendAPI.rejectLeaveRequest(selectedRequest.id, rejectReason);
       } else if (selectedRequest.type === 'share_adjustment') {
         await backendAPI.rejectRentDiscount(selectedRequest.id, rejectReason, user?.id || '');
+      } else if (['early_leave', 'noc', 'passport'].includes(selectedRequest.type)) {
+        // Generic HR request rejection
+        await backendAPI.rejectHRRequest(selectedRequest.id, rejectReason, user?.id || '');
       }
       
       Toast.show({
@@ -271,10 +343,12 @@ export default function RequestsScreen() {
     switch (type) {
       case 'leave': return 'calendar-outline';
       case 'share_adjustment': return 'cash-outline';
+      case 'early_leave': return 'time-outline';
       case 'noc': return 'document-text-outline';
       case 'salary_cert': return 'receipt-outline';
       case 'loan': return 'wallet-outline';
       case 'exit_permit': return 'airplane-outline';
+      case 'passport': return 'card-outline';
       default: return 'document-outline';
     }
   };
@@ -283,10 +357,12 @@ export default function RequestsScreen() {
     switch (type) {
       case 'leave': return 'Leave Request';
       case 'share_adjustment': return 'Share Adjustment';
+      case 'early_leave': return 'Early Leave';
       case 'noc': return 'NOC Request';
       case 'salary_cert': return 'Salary Certificate';
       case 'loan': return 'Loan Request';
       case 'exit_permit': return 'Exit Permit';
+      case 'passport': return 'Passport Request';
       default: return 'Request';
     }
   };
@@ -295,10 +371,12 @@ export default function RequestsScreen() {
     switch (type) {
       case 'leave': return theme.colors.success;
       case 'share_adjustment': return theme.colors.warning;
+      case 'early_leave': return '#EC4899';
       case 'noc': return theme.colors.info || '#3B82F6';
       case 'salary_cert': return '#8B5CF6';
       case 'loan': return '#EC4899';
       case 'exit_permit': return '#F97316';
+      case 'passport': return '#F59E0B';
       default: return theme.colors.admin.primary;
     }
   };
@@ -431,6 +509,26 @@ export default function RequestsScreen() {
                   </Text>
                   <Text style={styles.amountText}>
                     {formatCurrency((request as ShareAdjustmentRequest).total_discount_amount)}
+                  </Text>
+                </View>
+              )}
+
+              {request.type === 'early_leave' && (
+                <View style={styles.detailsRow}>
+                  <Text style={styles.detailText}>
+                    ⏰ Leave at {(request as EarlyLeaveRequest).departure_time || request.data?.departure_time || 'N/A'}
+                  </Text>
+                  <Text style={styles.detailSubtext}>
+                    {formatDate((request as EarlyLeaveRequest).date || request.data?.date || request.created_at)}
+                  </Text>
+                </View>
+              )}
+
+              {(request.type === 'noc' || request.type === 'passport') && (
+                <View style={styles.detailsRow}>
+                  <Text style={styles.detailText}>
+                    {request.type === 'noc' ? '📄 Purpose: ' : '🛂 Reason: '}
+                    {request.data?.purpose || request.data?.reason || request.reason || 'Not specified'}
                   </Text>
                 </View>
               )}

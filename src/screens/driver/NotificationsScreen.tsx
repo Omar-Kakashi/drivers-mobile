@@ -159,18 +159,18 @@ const styles = StyleSheet.create({
     paddingVertical: 80,
   },
   emptyText: {
-    ...theme.typography.body,
+    ...theme.typography.body1,
     color: theme.colors.text.secondary,
     marginTop: theme.spacing.md,
   },
   notificationCard: {
     flexDirection: 'row',
-    backgroundColor: theme.colors.white,
+    backgroundColor: theme.colors.text.white,
     margin: theme.spacing.sm,
     marginHorizontal: theme.spacing.md,
     padding: theme.spacing.md,
     borderRadius: 12,
-    ...theme.shadows.sm,
+    ...theme.shadows.small,
   },
   unreadCard: {
     backgroundColor: theme.colors.driver.light,
@@ -193,7 +193,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   message: {
-    ...theme.typography.body,
+    ...theme.typography.body1,
     color: theme.colors.text.secondary,
     marginBottom: theme.spacing.xs,
   },
