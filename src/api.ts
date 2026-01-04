@@ -407,6 +407,14 @@ class BackendAPI {
     return data;
   }
 
+  /**
+   * Get all vehicles (for admin dashboard stats)
+   */
+  async getVehicles(): Promise<any[]> {
+    const { data } = await this.client.get('/vehicles');
+    return data;
+  }
+
   async uploadDriverDocument(
     driverId: string,
     documentType: string,
