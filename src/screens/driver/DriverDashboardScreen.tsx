@@ -20,6 +20,7 @@ import { Logo } from '../../components/Logo';
 import { OptimizedImage } from '../../components/OptimizedImage';
 import { DashboardSkeleton } from '../../components/SkeletonLoader';
 import { DashboardSummaryWidget } from '../../components/DashboardSummaryWidget';
+import { OfflineBanner } from '../../components/OfflineBanner';
 import { lightHaptic, selectionHaptic } from '../../utils/haptics';
 import { resolveImageUrl } from '../../utils/urlHelper';
 
@@ -103,6 +104,9 @@ export default function DriverDashboardScreen() {
 
   return (
     <Screen style={styles.container} padding>
+      {/* Offline Banner */}
+      <OfflineBanner />
+      
       <ScrollView 
         contentContainerStyle={styles.scrollContent}
         refreshControl={

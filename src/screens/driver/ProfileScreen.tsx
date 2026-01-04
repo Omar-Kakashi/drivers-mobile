@@ -1,16 +1,24 @@
 /**
- * Profile Screen - Driver profile, settings, password change
+ * Profile Screen - Driver profile, settings, password change, biometric
  */
 
 import React, { useState, useEffect } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, TextInput, Alert, Modal, Image, ActivityIndicator } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, TextInput, Alert, Modal, Image, ActivityIndicator, Switch } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { theme } from '../../theme';
 import { useAuthStore } from '../../stores/authStore';
 import { backendAPI } from '../../api';
 import { Driver, Balance } from '../../types';
-import { toastValidationError, toastUpdateSuccess, toastError } from '../../utils/toastHelpers';
+import { toastValidationError, toastUpdateSuccess, toastError, toastSuccess } from '../../utils/toastHelpers';
+import { 
+  isBiometricAvailable, 
+  isBiometricEnabled, 
+  enableBiometric, 
+  disableBiometric,
+  getBiometricTypeName,
+  authenticateBiometric
+} from '../../utils/biometric';
 
 export default function ProfileScreen() {
   const { user, logout } = useAuthStore();
@@ -23,10 +31,56 @@ export default function ProfileScreen() {
   const [changing, setChanging] = useState(false);
   const [balance, setBalance] = useState<Balance | null>(null);
   const [loadingBalance, setLoadingBalance] = useState(true);
+  
+  // Biometric state
+  const [biometricAvailable, setBiometricAvailable] = useState(false);
+  const [biometricEnabled, setBiometricEnabled] = useState(false);
+  const [biometricName, setBiometricName] = useState('Biometrics');
+  const [loadingBiometric, setLoadingBiometric] = useState(true);
 
   useEffect(() => {
     loadBalance();
+    loadBiometricStatus();
   }, []);
+  
+  const loadBiometricStatus = async () => {
+    try {
+      const [available, enabled, name] = await Promise.all([
+        isBiometricAvailable(),
+        isBiometricEnabled(),
+        getBiometricTypeName(),
+      ]);
+      setBiometricAvailable(available);
+      setBiometricEnabled(enabled);
+      setBiometricName(name);
+    } catch (error) {
+      console.error('Failed to check biometric status:', error);
+    } finally {
+      setLoadingBiometric(false);
+    }
+  };
+  
+  const handleBiometricToggle = async (enabled: boolean) => {
+    try {
+      if (enabled) {
+        // Verify biometric before enabling
+        const result = await authenticateBiometric(`Verify ${biometricName} to enable`);
+        if (result.success) {
+          await enableBiometric(driver.id);
+          setBiometricEnabled(true);
+          toastSuccess(`${biometricName} enabled for quick login`);
+        } else if (result.error && result.error !== 'Cancelled') {
+          toastError({ message: result.error }, 'Biometric Failed');
+        }
+      } else {
+        await disableBiometric();
+        setBiometricEnabled(false);
+        toastSuccess(`${biometricName} disabled`);
+      }
+    } catch (error: any) {
+      toastError(error, 'Failed to update biometric setting');
+    }
+  };
 
   const loadBalance = async () => {
     try {
@@ -191,12 +245,33 @@ export default function ProfileScreen() {
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>Settings</Text>
         
+        {/* Biometric Login Toggle */}
+        {biometricAvailable && !loadingBiometric && (
+          <View style={styles.settingRow}>
+            <Ionicons 
+              name={biometricName.includes('Face') ? 'scan-outline' : 'finger-print-outline'} 
+              size={24} 
+              color={theme.colors.driver.primary} 
+            />
+            <View style={styles.settingTextContainer}>
+              <Text style={styles.settingText}>{biometricName} Login</Text>
+              <Text style={styles.settingSubtext}>Quick login without password</Text>
+            </View>
+            <Switch
+              value={biometricEnabled}
+              onValueChange={handleBiometricToggle}
+              trackColor={{ false: theme.colors.border, true: theme.colors.driver.light }}
+              thumbColor={biometricEnabled ? theme.colors.driver.primary : '#f4f3f4'}
+            />
+          </View>
+        )}
+        
         <TouchableOpacity
           style={styles.settingButton}
           onPress={() => navigation.navigate('AccidentReportHistory')}
         >
           <MaterialCommunityIcons name="car-emergency" size={24} color="#DC2626" />
-          <Text style={styles.settingText}>Accident Report History</Text>
+          <Text style={[styles.settingText, styles.settingButtonText]}>Accident Report History</Text>
           <Ionicons name="chevron-forward" size={20} color={theme.colors.text.secondary} />
         </TouchableOpacity>
         
@@ -205,13 +280,13 @@ export default function ProfileScreen() {
           onPress={() => setShowPasswordModal(true)}
         >
           <Ionicons name="key-outline" size={24} color={theme.colors.driver.primary} />
-          <Text style={styles.settingText}>Change Password</Text>
+          <Text style={[styles.settingText, styles.settingButtonText]}>Change Password</Text>
           <Ionicons name="chevron-forward" size={20} color={theme.colors.text.secondary} />
         </TouchableOpacity>
         
         <TouchableOpacity style={styles.settingButton} onPress={handleLogout}>
           <Ionicons name="log-out-outline" size={24} color={theme.colors.error} />
-          <Text style={[styles.settingText, styles.logoutText]}>Logout</Text>
+          <Text style={[styles.settingText, styles.settingButtonText, styles.logoutText]}>Logout</Text>
           <Ionicons name="chevron-forward" size={20} color={theme.colors.text.secondary} />
         </TouchableOpacity>
       </View>
@@ -384,9 +459,29 @@ const styles = StyleSheet.create({
     marginBottom: theme.spacing.sm,
     ...theme.shadows.small,
   },
+  settingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: theme.colors.surface,
+    padding: theme.spacing.md,
+    borderRadius: 12,
+    marginBottom: theme.spacing.sm,
+    ...theme.shadows.small,
+  },
+  settingTextContainer: {
+    flex: 1,
+    marginLeft: theme.spacing.md,
+  },
   settingText: {
     ...theme.typography.body1,
     color: theme.colors.text.primary,
+  },
+  settingSubtext: {
+    ...theme.typography.caption,
+    color: theme.colors.text.secondary,
+    marginTop: 2,
+  },
+  settingButtonText: {
     marginLeft: theme.spacing.md,
     flex: 1,
   },

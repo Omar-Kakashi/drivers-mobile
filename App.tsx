@@ -14,6 +14,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import RootNavigator from './src/navigation/RootNavigator';
 import { SplashScreen } from './src/components/SplashScreen';
 import { initNetworkMonitoring } from './src/utils/networkUtils';
+import { useNetworkStore } from './src/stores/networkStore';
 import Toast from 'react-native-toast-message';
 
 export default function App() {
@@ -33,9 +34,13 @@ export default function App() {
     console.log('🚀 Starting network monitoring...');
     const unsubscribe = initNetworkMonitoring();
     
+    // Initialize network store for offline mode detection
+    const unsubscribeNetwork = useNetworkStore.getState().initialize();
+    
     return () => {
       console.log('🛑 Stopping network monitoring...');
       unsubscribe();
+      unsubscribeNetwork();
     };
   }, []);
 
