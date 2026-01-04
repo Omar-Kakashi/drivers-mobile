@@ -9,15 +9,6 @@ export default function DriverHRHubScreen() {
 
   const hrOptions = [
     {
-      id: 'leave-request',
-      title: 'Request Leave',
-      description: 'Submit a new leave request',
-      icon: 'calendar-outline' as const,
-      iconFamily: 'ionicons',
-      color: theme.colors.driver.primary,
-      screen: 'Leave Request',
-    },
-    {
       id: 'my-requests',
       title: 'My Requests',
       description: 'View all your HR requests',
@@ -25,6 +16,15 @@ export default function DriverHRHubScreen() {
       iconFamily: 'ionicons',
       color: '#3B82F6',
       screen: 'My Requests',
+    },
+    {
+      id: 'leave-request',
+      title: 'Request Leave',
+      description: 'Submit a new leave request',
+      icon: 'calendar-outline' as const,
+      iconFamily: 'ionicons',
+      color: theme.colors.driver.primary,
+      screen: 'Leave Request',
     },
     {
       id: 'leave-return',
@@ -61,24 +61,6 @@ export default function DriverHRHubScreen() {
       iconFamily: 'ionicons',
       color: '#F59E0B',
       screen: 'SalaryCertificate',
-    },
-    {
-      id: 'loan-certificate',
-      title: 'Salary Advance',
-      description: 'Request a salary advance',
-      icon: 'cash-outline' as const,
-      iconFamily: 'ionicons',
-      color: '#EF4444',
-      screen: 'LoanCertificate',
-    },
-    {
-      id: 'exit-permit',
-      title: 'Exit Permit',
-      description: 'إذن خروج - Request to leave early',
-      icon: 'time-outline' as const,
-      iconFamily: 'ionicons',
-      color: '#EC4899',
-      screen: 'ExitPermit',
     },
     {
       id: 'accident-report',

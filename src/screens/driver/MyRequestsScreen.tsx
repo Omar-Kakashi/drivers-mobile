@@ -1,5 +1,6 @@
 /**
- * My Requests Screen - Unified view of all HR requests (Leave + Passport)
+ * My Requests Screen - Unified view of all HR requests
+ * Includes: Leave Requests, Passport Handovers, NOC, Salary Certificate, Accident Reports
  */
 
 import React, { useEffect, useState } from 'react';
@@ -12,7 +13,7 @@ import {
   RefreshControl,
   TouchableOpacity,
 } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { theme } from '../../theme';
 import { useAuthStore } from '../../stores/authStore';
 import { backendAPI } from '../../api';
@@ -20,12 +21,12 @@ import { LeaveRequest, PassportHandover } from '../../types';
 
 type RequestItem = {
   id: string;
-  type: 'leave' | 'passport';
+  type: string; // 'leave', 'passport', 'noc', 'salary_certificate', 'early_leave', 'accident_report'
   status: string;
   title: string;
   subtitle: string;
   date: string;
-  data: LeaveRequest | PassportHandover;
+  data: any;
 };
 
 const MyRequestsScreen = () => {
@@ -42,10 +43,11 @@ const MyRequestsScreen = () => {
     try {
       setError(null);
       
-      // Fetch leave requests and passport handovers in parallel
-      const [leaveRequests, passportHandovers] = await Promise.all([
+      // Fetch all request types in parallel
+      const [leaveRequests, passportHandovers, hrRequests] = await Promise.all([
         backendAPI.getLeaveRequests(user.id, 'driver').catch(() => []),
         backendAPI.getPassportHandovers(user.id, 'driver').catch(() => []),
+        backendAPI.getHRRequests(user.id).catch(() => []),
       ]);
 
       // Combine and format all requests
@@ -53,7 +55,7 @@ const MyRequestsScreen = () => {
         // Leave requests
         ...(leaveRequests || []).map((req: LeaveRequest) => ({
           id: req.id,
-          type: 'leave' as const,
+          type: 'leave',
           status: req.status,
           title: getLeaveTypeName(req.leave_type_id),
           subtitle: `${formatDate(req.start_date)} - ${formatDate(req.end_date)}`,
@@ -63,19 +65,34 @@ const MyRequestsScreen = () => {
         // Passport handover requests
         ...(passportHandovers || []).map((req: PassportHandover) => ({
           id: req.id,
-          type: 'passport' as const,
-          status: req.workflow_state,
+          type: 'passport',
+          status: req.workflow_state || req.status,
           title: 'Passport Handover',
           subtitle: `Return: ${formatDate(req.expected_return_date)}`,
           date: req.created_at,
           data: req,
         })),
+        // HR Requests (NOC, Salary Certificate, Early Leave, Accident Reports)
+        ...(hrRequests || []).map((req: any) => ({
+          id: req.id,
+          type: req.request_type,
+          status: req.status,
+          title: getRequestTypeName(req.request_type),
+          subtitle: getRequestSubtitle(req),
+          date: req.created_at,
+          data: req,
+        })),
       ];
 
+      // Remove duplicates (HR requests might include same leave/passport data)
+      const uniqueRequests = combined.filter((req, index, self) =>
+        index === self.findIndex((r) => r.id === req.id)
+      );
+
       // Sort by date (newest first)
-      combined.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      uniqueRequests.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
       
-      setRequests(combined);
+      setRequests(uniqueRequests);
     } catch (err: any) {
       console.error('Error fetching requests:', err);
       setError(err.message || 'Failed to load requests');
@@ -153,17 +170,76 @@ const MyRequestsScreen = () => {
     return mapping[typeId] || typeId;
   };
 
+  const getRequestTypeName = (requestType: string) => {
+    const mapping: Record<string, string> = {
+      noc: 'NOC Request',
+      salary_certificate: 'Salary Certificate',
+      early_leave: 'Early Leave',
+      accident_report: 'Accident Report',
+      leave_request: 'Leave Request',
+      passport_handover: 'Passport Handover',
+    };
+    return mapping[requestType] || requestType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  };
+
+  const getRequestSubtitle = (req: any) => {
+    const data = req.data || {};
+    switch (req.request_type) {
+      case 'noc':
+        return data.purpose || 'No Objection Certificate';
+      case 'salary_certificate':
+        return data.purpose || 'For official use';
+      case 'early_leave':
+        return data.leave_time ? `Leave at: ${data.leave_time}` : 'Early departure request';
+      case 'accident_report':
+        return data.accident_date ? `Date: ${formatDate(data.accident_date)}` : 'Accident documentation';
+      default:
+        return formatDate(req.created_at);
+    }
+  };
+
   const formatDate = (dateStr: string) => {
+    if (!dateStr) return 'N/A';
     const date = new Date(dateStr);
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
-  const getRequestIcon = (type: 'leave' | 'passport') => {
-    return type === 'leave' ? 'calendar-outline' : 'document-lock-outline';
+  const getRequestIcon = (type: string) => {
+    switch (type) {
+      case 'leave':
+        return { name: 'calendar-outline', family: 'ionicons' };
+      case 'passport':
+        return { name: 'document-lock-outline', family: 'ionicons' };
+      case 'noc':
+        return { name: 'file-certificate', family: 'material-community' };
+      case 'salary_certificate':
+        return { name: 'document-text-outline', family: 'ionicons' };
+      case 'early_leave':
+        return { name: 'time-outline', family: 'ionicons' };
+      case 'accident_report':
+        return { name: 'car-emergency', family: 'material-community' };
+      default:
+        return { name: 'document-outline', family: 'ionicons' };
+    }
   };
 
-  const getRequestIconColor = (type: 'leave' | 'passport') => {
-    return type === 'leave' ? theme.colors.driver.primary : theme.colors.warning;
+  const getRequestIconColor = (type: string) => {
+    switch (type) {
+      case 'leave':
+        return theme.colors.driver.primary;
+      case 'passport':
+        return theme.colors.warning;
+      case 'noc':
+        return '#6366F1';
+      case 'salary_certificate':
+        return '#F59E0B';
+      case 'early_leave':
+        return '#EC4899';
+      case 'accident_report':
+        return '#DC2626';
+      default:
+        return theme.colors.text.secondary;
+    }
   };
 
   const filteredRequests = requests.filter(req => {
@@ -185,15 +261,21 @@ const MyRequestsScreen = () => {
     </TouchableOpacity>
   );
 
+  const renderRequestIcon = (type: string) => {
+    const iconInfo = getRequestIcon(type);
+    const iconColor = getRequestIconColor(type);
+    
+    if (iconInfo.family === 'material-community') {
+      return <MaterialCommunityIcons name={iconInfo.name as any} size={24} color={iconColor} />;
+    }
+    return <Ionicons name={iconInfo.name as any} size={24} color={iconColor} />;
+  };
+
   const renderRequest = ({ item }: { item: RequestItem }) => (
     <View style={styles.card}>
       <View style={styles.cardHeader}>
         <View style={styles.typeContainer}>
-          <Ionicons 
-            name={getRequestIcon(item.type) as any} 
-            size={24} 
-            color={getRequestIconColor(item.type)} 
-          />
+          {renderRequestIcon(item.type)}
           <View style={styles.titleContainer}>
             <Text style={styles.requestTitle}>{item.title}</Text>
             <Text style={styles.requestSubtitle}>{item.subtitle}</Text>
@@ -213,19 +295,27 @@ const MyRequestsScreen = () => {
       </View>
 
       {/* Show additional details based on type */}
-      {item.type === 'leave' && (
+      {item.type === 'leave' && item.data?.reason && (
         <View style={styles.detailsSection}>
           <Text style={styles.detailLabel}>Reason:</Text>
-          <Text style={styles.detailText}>{(item.data as LeaveRequest).reason}</Text>
+          <Text style={styles.detailText}>{item.data.reason}</Text>
         </View>
       )}
       
-      {item.type === 'passport' && (
+      {item.type === 'passport' && item.data?.reason && (
         <View style={styles.detailsSection}>
           <Text style={styles.detailLabel}>Purpose:</Text>
           <Text style={styles.detailText}>
-            {(item.data as PassportHandover).reason?.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+            {item.data.reason?.replace(/_/g, ' ').replace(/\b\w/g, (l: string) => l.toUpperCase())}
           </Text>
+        </View>
+      )}
+
+      {/* NOC and other HR requests */}
+      {item.data?.data?.purpose && (
+        <View style={styles.detailsSection}>
+          <Text style={styles.detailLabel}>Purpose:</Text>
+          <Text style={styles.detailText}>{item.data.data.purpose}</Text>
         </View>
       )}
     </View>

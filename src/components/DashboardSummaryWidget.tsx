@@ -65,8 +65,10 @@ export function DashboardSummaryWidget({ driverId, userId }: DashboardSummaryWid
       return { icon: 'file-document-outline', color: theme.colors.text.secondary, text: 'Loading...' };
     }
     
-    if (expiringDocuments.length === 0 && nearestExpiryDays === null) {
-      return { icon: 'file-document-check', color: '#10B981', text: 'All OK' };
+    // If no documents at all, this is a problem - not "All OK"
+    const allDocs = useDocumentStore.getState().documents;
+    if (allDocs.length === 0) {
+      return { icon: 'file-document-alert', color: '#F59E0B', text: 'No Documents' };
     }
     
     if (nearestExpiryDays !== null) {
@@ -83,6 +85,11 @@ export function DashboardSummaryWidget({ driverId, userId }: DashboardSummaryWid
       if (nearestExpiryDays <= 30) {
         return { icon: 'file-document-alert', color, text: `${nearestExpiryDays} days left` };
       }
+      return { icon: 'file-document-check', color: '#10B981', text: 'All OK' };
+    }
+    
+    // Has documents but none with expiry dates tracked
+    if (expiringDocuments.length === 0) {
       return { icon: 'file-document-check', color: '#10B981', text: 'All OK' };
     }
     

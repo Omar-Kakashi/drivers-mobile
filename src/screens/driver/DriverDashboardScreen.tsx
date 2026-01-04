@@ -126,20 +126,6 @@ export default function DriverDashboardScreen() {
               <Text style={styles.greeting}>Hello, {driver.name.split(' ')[0]}</Text>
             </View>
           </View>
-          <TouchableOpacity
-            style={styles.notificationButton}
-            onPress={() => {
-              selectionHaptic();
-              navigation.navigate('Notifications');
-            }}
-          >
-            <Ionicons name="notifications-outline" size={24} color={theme.colors.text.primary} />
-            {unreadCount > 0 && (
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>{unreadCount}</Text>
-              </View>
-            )}
-          </TouchableOpacity>
         </View>
 
         {/* Quick Overview Widget - Document Expiry & Balance */}

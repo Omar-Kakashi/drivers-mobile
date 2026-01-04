@@ -8,6 +8,23 @@ import { create } from 'zustand';
 import { backendAPI } from '../api';
 import { Assignment } from '../types';
 
+/**
+ * Merge vehicle info into assignment object for easy dashboard access
+ */
+function mergeAssignmentWithVehicle(assignment: any, vehicle: any): Assignment | null {
+  if (!assignment) return null;
+  
+  return {
+    ...assignment,
+    // Add vehicle fields that the dashboard expects
+    vehicle_license_plate: vehicle?.license_plate || '',
+    license_plate: vehicle?.license_plate || '',
+    make_model: vehicle?.make_model || '',
+    vehicle_image_url: vehicle?.image_url || null,
+    daily_rent: vehicle?.daily_rental_rate ? parseFloat(vehicle.daily_rental_rate) : (assignment.daily_rent || 0),
+  };
+}
+
 interface AssignmentState {
   // Data
   currentAssignment: Assignment | null;
@@ -56,8 +73,10 @@ export const useAssignmentStore = create<AssignmentState>((set, get) => ({
       set({ isRefreshing: true });
       try {
         const data = await backendAPI.getDriverAssignment(driverId);
+        // Merge vehicle info into assignment for easy access
+        const mergedAssignment = mergeAssignmentWithVehicle(data.assignment, data.vehicle);
         set({ 
-          currentAssignment: data.assignment,
+          currentAssignment: mergedAssignment,
           vehicle: data.vehicle,
           lastFetched: Date.now(),
           isRefreshing: false,
@@ -75,8 +94,10 @@ export const useAssignmentStore = create<AssignmentState>((set, get) => ({
     
     try {
       const data = await backendAPI.getDriverAssignment(driverId);
+      // Merge vehicle info into assignment for easy access
+      const mergedAssignment = mergeAssignmentWithVehicle(data.assignment, data.vehicle);
       set({ 
-        currentAssignment: data.assignment,
+        currentAssignment: mergedAssignment,
         vehicle: data.vehicle,
         lastFetched: Date.now(),
         isLoading: false,
