@@ -176,7 +176,7 @@ export default function DriverDashboardScreen() {
                 <View style={styles.detailItem}>
                   <Ionicons name="pricetag-outline" size={16} color={theme.colors.text.secondary} />
                   <Text style={styles.detailText}>
-                    AED {currentAssignment.daily_rent.toFixed(2)} / day
+                    AED {formatAmount(currentAssignment.daily_rent)} / day
                   </Text>
                 </View>
               </View>
