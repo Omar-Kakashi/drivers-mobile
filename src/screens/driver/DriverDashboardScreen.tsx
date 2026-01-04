@@ -19,6 +19,7 @@ import { Button } from '../../components/Button';
 import { Logo } from '../../components/Logo';
 import { OptimizedImage } from '../../components/OptimizedImage';
 import { DashboardSkeleton } from '../../components/SkeletonLoader';
+import { DashboardSummaryWidget } from '../../components/DashboardSummaryWidget';
 import { lightHaptic, selectionHaptic } from '../../utils/haptics';
 import { resolveImageUrl } from '../../utils/urlHelper';
 
@@ -136,6 +137,9 @@ export default function DriverDashboardScreen() {
             )}
           </TouchableOpacity>
         </View>
+
+        {/* Quick Overview Widget - Document Expiry & Balance */}
+        <DashboardSummaryWidget driverId={driver.id} userId={driver.id} />
 
         {/* Current Assignment Card */}
         <Text style={styles.sectionTitle}>Current Vehicle</Text>

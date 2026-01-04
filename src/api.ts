@@ -739,6 +739,42 @@ class BackendAPI {
     });
     return data;
   }
+
+  // ==================== DRIVER DOCUMENTS ====================
+
+  /**
+   * Get driver documents (license, ID, medical cert, etc.)
+   */
+  async getDriverDocuments(driverId: string): Promise<any[]> {
+    const { data } = await this.client.get('/documents/driver-documents/', {
+      params: { driver_id: driverId, is_active: true }
+    });
+    return data;
+  }
+
+  /**
+   * Get documents expiring soon (within 30 days)
+   */
+  async getExpiringDocuments(driverId: string): Promise<any[]> {
+    const { data } = await this.client.get('/documents/driver-documents/', {
+      params: { driver_id: driverId, expiring_soon: true }
+    });
+    return data;
+  }
+
+  /**
+   * Get driver's pending HR requests count
+   */
+  async getPendingHRRequestsCount(userId: string): Promise<number> {
+    try {
+      const { data } = await this.client.get('/hr-requests', {
+        params: { user_id: userId, status: 'pending' }
+      });
+      return Array.isArray(data) ? data.length : 0;
+    } catch {
+      return 0;
+    }
+  }
 }
 
 export const backendAPI = new BackendAPI();

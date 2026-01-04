@@ -10,6 +10,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { theme } from '../theme';
 import { useNavigation } from '@react-navigation/native';
 import { useUnreadNotificationCount } from '../hooks/useUnreadNotificationCount';
+import { useExpiringDocumentCount } from '../hooks/useExpiringDocumentCount';
 
 // Driver Screens
 import DriverDashboardScreen from '../screens/driver/DriverDashboardScreen';
@@ -41,6 +42,7 @@ const Stack = createStackNavigator();
 
 function DriverTabs() {
   const { unreadCount } = useUnreadNotificationCount();
+  const { expiringCount } = useExpiringDocumentCount();
   const insets = useSafeAreaInsets();
 
   return (
@@ -111,6 +113,13 @@ function DriverTabs() {
         options={{
           tabBarLabel: 'Docs',
           tabBarIcon: ({ color, size }) => <Ionicons name="folder" size={size} color={color} />,
+          tabBarBadge: expiringCount > 0 ? expiringCount : undefined,
+          tabBarBadgeStyle: expiringCount > 0 ? {
+            backgroundColor: '#F59E0B',
+            fontSize: 10,
+            minWidth: 18,
+            height: 18,
+          } : undefined,
         }}
       />
       <Tab.Screen
