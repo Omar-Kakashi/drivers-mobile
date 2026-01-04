@@ -10,6 +10,7 @@ import './auto-logger';
 
 import React, { useState, useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import RootNavigator from './src/navigation/RootNavigator';
 import { SplashScreen } from './src/components/SplashScreen';
@@ -45,14 +46,18 @@ export default function App() {
   }, []);
 
   if (!isReady) {
-    return <SplashScreen />;
+    return (
+      <SafeAreaProvider>
+        <SplashScreen />
+      </SafeAreaProvider>
+    );
   }
 
   return (
-    <>
+    <SafeAreaProvider>
       <RootNavigator />
       <StatusBar style="light" />
       <Toast />
-    </>
+    </SafeAreaProvider>
   );
 }
