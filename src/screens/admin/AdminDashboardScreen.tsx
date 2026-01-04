@@ -45,6 +45,8 @@ export default function AdminDashboardScreen() {
     notifications: 0,
     pendingLeave: 0,
     pendingShare: 0,
+    activeDrivers: 0,
+    activeVehicles: 0,
   });
   
   // Create Share Adjustment Modal
@@ -72,18 +74,24 @@ export default function AdminDashboardScreen() {
   const loadStats = useCallback(async () => {
     try {
       // Load pending counts in parallel
-      const [leaveRequests, shareAdjustments, notifications] = await Promise.all([
+      const [leaveRequests, shareAdjustments, notifications, drivers, vehicles] = await Promise.all([
         backendAPI.getPendingLeaveRequests().catch(() => []),
         backendAPI.getPendingRentDiscounts().catch(() => []),
         backendAPI.getNotifications(user?.id || '', 'admin').catch(() => []),
+        backendAPI.getDrivers().catch(() => []),
+        backendAPI.getVehicles().catch(() => []),
       ]);
       
       const unreadNotifications = notifications.filter((n: any) => !n.is_read).length;
+      const activeDriverCount = drivers.filter((d: any) => d.status === 'active').length;
+      const activeVehicleCount = vehicles.filter((v: any) => v.status === 'work' || v.status === 'available').length;
       
       setStats({
         notifications: unreadNotifications,
         pendingLeave: leaveRequests.length,
         pendingShare: shareAdjustments.length,
+        activeDrivers: activeDriverCount,
+        activeVehicles: activeVehicleCount,
       });
     } catch (error) {
       console.error('Failed to load stats:', error);
@@ -254,6 +262,21 @@ export default function AdminDashboardScreen() {
           <Text style={styles.statValue}>{totalPending}</Text>
           <Text style={styles.statLabel}>Pending</Text>
         </TouchableOpacity>
+      </View>
+
+      {/* Fleet Overview Stats */}
+      <View style={styles.fleetStatsRow}>
+        <View style={styles.fleetStatCard}>
+          <Ionicons name="people" size={24} color={theme.colors.success} />
+          <Text style={styles.fleetStatValue}>{stats.activeDrivers}</Text>
+          <Text style={styles.fleetStatLabel}>Active Drivers</Text>
+        </View>
+        
+        <View style={styles.fleetStatCard}>
+          <Ionicons name="car" size={24} color={theme.colors.info} />
+          <Text style={styles.fleetStatValue}>{stats.activeVehicles}</Text>
+          <Text style={styles.fleetStatLabel}>Active Vehicles</Text>
+        </View>
       </View>
 
       {/* Pending Breakdown */}
@@ -600,6 +623,31 @@ const styles = StyleSheet.create({
     color: theme.colors.white,
     opacity: 0.9,
     marginTop: theme.spacing.xs,
+  },
+  fleetStatsRow: {
+    flexDirection: 'row',
+    marginHorizontal: theme.spacing.md,
+    marginBottom: theme.spacing.md,
+    gap: theme.spacing.md,
+  },
+  fleetStatCard: {
+    flex: 1,
+    backgroundColor: theme.colors.white,
+    padding: theme.spacing.md,
+    borderRadius: 12,
+    alignItems: 'center',
+    ...theme.shadows.md,
+  },
+  fleetStatValue: {
+    ...theme.typography.h2,
+    color: theme.colors.text.primary,
+    fontWeight: 'bold',
+    marginTop: theme.spacing.xs,
+  },
+  fleetStatLabel: {
+    ...theme.typography.caption,
+    color: theme.colors.text.secondary,
+    marginTop: 2,
   },
   card: {
     backgroundColor: theme.colors.white,
