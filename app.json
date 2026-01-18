@@ -51,13 +51,11 @@
     "plugins": [
       "expo-font"
     ],
+    "owner": "omarkakashi",
     "extra": {
       "eas": {
-        "projectId": "9b1de6bc-a863-4b20-82d4-12b38c0352ba"
+        "projectId": "c6f29da1-fe3e-4b76-ae1d-ccc636e1c8f6"
       }
-    },
-    "updates": {
-      "url": "https://u.expo.dev/9b1de6bc-a863-4b20-82d4-12b38c0352ba"
     }
   }
 }
