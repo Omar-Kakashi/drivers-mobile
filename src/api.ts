@@ -813,6 +813,94 @@ class BackendAPI {
       return 0;
     }
   }
+
+  // ==================== PARCEL TRANSFERS (Services) ====================
+
+  /**
+   * Get parcel transfers for a user
+   */
+  async getParcelTransfers(userId: string, userRole: string, status?: string): Promise<any[]> {
+    const params: any = { user_id: userId, user_role: userRole };
+    if (status) params.status = status;
+    const { data } = await this.client.get('/parcel-transfers', { params });
+    return data;
+  }
+
+  /**
+   * Get staff list for parcel transfers (receivers/couriers)
+   */
+  async getParcelTransferStaff(): Promise<any[]> {
+    const { data } = await this.client.get('/parcel-transfers/staff');
+    return data;
+  }
+
+  /**
+   * Get parcel transfer statistics
+   */
+  async getParcelTransferStats(userId: string, userRole: string): Promise<any> {
+    const { data } = await this.client.get('/parcel-transfers/stats/summary', {
+      params: { user_id: userId, user_role: userRole }
+    });
+    return data;
+  }
+
+  /**
+   * Create a new parcel transfer
+   */
+  async createParcelTransfer(senderId: string, transferData: {
+    receiver_id: string;
+    courier_id: string;
+    priority?: string;
+    notes?: string;
+    sender_signature: string;
+    items: Array<{
+      item_type: string;
+      description?: string;
+      quantity?: number;
+      cheque_number?: string;
+      cheque_amount?: number;
+      cheque_bank?: string;
+      passport_employee_id?: string;
+    }>;
+  }): Promise<any> {
+    const { data } = await this.client.post('/parcel-transfers', transferData, {
+      params: { sender_id: senderId }
+    });
+    return data;
+  }
+
+  /**
+   * Acknowledge a parcel transfer (receiver confirms receipt)
+   */
+  async acknowledgeParcelTransfer(transferId: string, userId: string, receiverSignature: string): Promise<void> {
+    await this.client.put(`/parcel-transfers/${transferId}/acknowledge`, {
+      receiver_signature: receiverSignature
+    }, {
+      params: { user_id: userId }
+    });
+  }
+
+  /**
+   * Reject a parcel transfer
+   */
+  async rejectParcelTransfer(transferId: string, userId: string, rejectionReason: string): Promise<void> {
+    await this.client.put(`/parcel-transfers/${transferId}/reject`, {
+      rejection_reason: rejectionReason
+    }, {
+      params: { user_id: userId }
+    });
+  }
+
+  /**
+   * Cancel a parcel transfer (sender cancels)
+   */
+  async cancelParcelTransfer(transferId: string, userId: string, cancellationReason: string): Promise<void> {
+    await this.client.put(`/parcel-transfers/${transferId}/cancel`, {
+      cancellation_reason: cancellationReason
+    }, {
+      params: { user_id: userId }
+    });
+  }
 }
 
 export const backendAPI = new BackendAPI();

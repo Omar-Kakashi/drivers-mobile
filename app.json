@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Ostol Mobile",
-    "slug": "ostol-mobile",
+    "name": "STSC Driver",
+    "slug": "stsc-driver",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -10,10 +10,11 @@
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
-      "backgroundColor": "#001f3f"
+      "backgroundColor": "#2563EB"
     },
     "ios": {
       "supportsTablet": true,
+      "bundleIdentifier": "ae.stsc.driver",
       "runtimeVersion": {
         "policy": "appVersion"
       }
@@ -21,10 +22,10 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "backgroundColor": "#2563EB"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.ostol.mobile",
+      "package": "ae.stsc.driver",
       "permissions": [
         "NOTIFICATIONS",
         "RECEIVE_BOOT_COMPLETED",

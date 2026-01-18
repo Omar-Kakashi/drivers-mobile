@@ -1,5 +1,10 @@
+/**
+ * Driver Login Screen - STSC Driver App
+ * Login with Driver ID or Phone Number
+ */
+
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, KeyboardAvoidingView, ScrollView, Platform, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, KeyboardAvoidingView, ScrollView, Platform } from 'react-native';
 import { theme } from '../../theme';
 import { useAuthStore } from '../../stores/authStore';
 import { toastValidationError, toastError } from '../../utils/toastHelpers';
@@ -7,9 +12,8 @@ import { Screen } from '../../components/Screen';
 import { Input } from '../../components/Input';
 import { Button } from '../../components/Button';
 import { Logo } from '../../components/Logo';
-import { Ionicons } from '@expo/vector-icons';
 
-export default function DriverLoginScreen({ navigation }: any) {
+export default function DriverLoginScreen() {
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -17,7 +21,6 @@ export default function DriverLoginScreen({ navigation }: any) {
   const login = useAuthStore((state) => state.login);
 
   const handleLogin = async () => {
-    // ... logic remains same ...
     if (!identifier.trim() || !password.trim()) {
       toastValidationError('driver ID/phone and password');
       return;
@@ -44,7 +47,7 @@ export default function DriverLoginScreen({ navigation }: any) {
 
       const processedIdentifier = String(normalizeIdentifier(identifier.trim()));
       console.log('Attempting login with identifier:', processedIdentifier);
-      await login(processedIdentifier, password, 'driver');
+      await login(processedIdentifier, password);
       // Navigation handled by RootNavigator after auth state changes
     } catch (error: any) {
       // Provide clearer error messages for validation or authentication failures
@@ -68,13 +71,9 @@ export default function DriverLoginScreen({ navigation }: any) {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.header}>
-            <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backIcon}>
-              <Ionicons name="arrow-back" size={24} color={theme.colors.text.primary} />
-            </TouchableOpacity>
-
-            <Logo size={60} style={styles.logo} />
-            <Text style={styles.title}>Welcome Back</Text>
-            <Text style={styles.subtitle}>Log in to access your driver dashboard</Text>
+            <Logo size={80} style={styles.logo} />
+            <Text style={styles.title}>STSC Driver</Text>
+            <Text style={styles.subtitle}>Log in to access your dashboard</Text>
           </View>
 
           <View style={styles.form}>
@@ -100,7 +99,7 @@ export default function DriverLoginScreen({ navigation }: any) {
             />
 
             <Button
-              title="Login"
+              title="Sign In"
               onPress={handleLogin}
               isLoading={loading}
               style={styles.loginButton}
@@ -128,27 +127,18 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     padding: theme.layout.containerPadding,
+    justifyContent: 'center',
   },
   header: {
     marginBottom: theme.spacing.xl,
-    marginTop: theme.spacing.lg,
     alignItems: 'center',
   },
   logo: {
-    marginBottom: theme.spacing.md,
-  },
-  backIcon: {
     marginBottom: theme.spacing.lg,
-    width: 40,
-    height: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    marginLeft: -12,
   },
   title: {
     ...theme.typography.h1,
-    color: theme.colors.text.primary,
+    color: theme.colors.primary,
     marginBottom: theme.spacing.sm,
   },
   subtitle: {

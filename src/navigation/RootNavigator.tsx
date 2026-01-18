@@ -1,5 +1,6 @@
 /**
- * Root Navigator - Handles authentication flow
+ * Root Navigator - Driver Mobile App
+ * Driver-only authentication flow
  */
 
 import React, { useEffect } from 'react';
@@ -10,20 +11,17 @@ import { useAuthStore } from '../stores/authStore';
 import { theme } from '../theme';
 import ExpoNotificationHandler from '../../ExpoNotificationHandler';
 
-// Auth Screens
-import LoginTypeScreen from '../screens/auth/LoginTypeScreen';
+// Auth Screens (Driver only)
 import DriverLoginScreen from '../screens/auth/DriverLoginScreen';
-import AdminLoginScreen from '../screens/auth/AdminLoginScreen';
 import ChangePasswordScreen from '../screens/auth/ChangePasswordScreen';
 
-// Main Navigators
+// Main Navigator
 import DriverNavigator from './DriverNavigator';
-import AdminNavigator from './AdminNavigator';
 
 const Stack = createStackNavigator();
 
 export default function RootNavigator() {
-  const { isAuthenticated, isLoading, user, userType, loadStoredAuth } = useAuthStore();
+  const { isAuthenticated, isLoading, user, loadStoredAuth } = useAuthStore();
 
   useEffect(() => {
     loadStoredAuth();
@@ -38,32 +36,22 @@ export default function RootNavigator() {
     );
   }
 
-  // Check if password change needed (ONLY for drivers with default password)
-  const needsPasswordChange = isAuthenticated && userType === 'driver' && user?.is_first_login;
+  // Check if password change needed (first login with default password)
+  const needsPasswordChange = isAuthenticated && user?.is_first_login;
 
   return (
     <NavigationContainer>
       <ExpoNotificationHandler />
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {!isAuthenticated ? (
-          // Auth Stack
-          <>
-            <Stack.Screen name="LoginType" component={LoginTypeScreen} />
-            <Stack.Screen name="DriverLogin" component={DriverLoginScreen} />
-            <Stack.Screen name="AdminLogin" component={AdminLoginScreen} />
-          </>
+          // Auth Stack (Driver login only)
+          <Stack.Screen name="DriverLogin" component={DriverLoginScreen} />
         ) : needsPasswordChange ? (
-          // Force password change
+          // Force password change on first login
           <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
         ) : (
-          // Main App Stack (based on user type)
-          <>
-            {userType === 'driver' ? (
-              <Stack.Screen name="DriverApp" component={DriverNavigator} />
-            ) : (
-              <Stack.Screen name="AdminApp" component={AdminNavigator} />
-            )}
-          </>
+          // Main Driver App
+          <Stack.Screen name="DriverApp" component={DriverNavigator} />
         )}
       </Stack.Navigator>
     </NavigationContainer>

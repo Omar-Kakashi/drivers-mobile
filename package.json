@@ -1,5 +1,5 @@
 {
-  "name": "drivers-mobile",
+  "name": "stsc-driver",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {

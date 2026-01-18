@@ -1,12 +1,12 @@
 /**
- * Authentication Store - Zustand
- * Manages user authentication state and tokens
+ * Authentication Store - Driver Mobile App
+ * Manages driver user authentication state and tokens
  */
 
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { backendAPI, getCurrentBackendUrl } from '../api';
-import { Driver, AdminUser, UserType } from '../types';
+import { Driver } from '../types';
 import { registerPushTokenAfterLogin } from '../utils/pushNotificationHelper';
 
 // Remote debug logger - sends logs to backend for debugging
@@ -32,14 +32,13 @@ const remoteLog = async (message: string, data?: any) => {
 };
 
 interface AuthState {
-  user: Driver | AdminUser | null;
-  userType: UserType | null;
+  user: Driver | null;
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
 
   // Actions
-  login: (identifier: string, password: string, type: UserType) => Promise<void>;
+  login: (identifier: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   changePassword: (newPassword: string) => Promise<void>;
   loadStoredAuth: () => Promise<void>;
@@ -47,73 +46,54 @@ interface AuthState {
 
 export const useAuthStore = create<AuthState>((set, get) => ({
   user: null,
-  userType: null,
   token: null,
   isAuthenticated: false,
   isLoading: true,
 
-  login: async (identifier: string, password: string, type: UserType) => {
+  login: async (identifier: string, password: string) => {
     try {
-      await remoteLog('LOGIN_ATTEMPT', { identifier, type, passwordLength: password.length });
+      await remoteLog('DRIVER_LOGIN_ATTEMPT', { identifier });
       
       // Clear any corrupted old data first
       await AsyncStorage.multiRemove(['authToken', 'user', 'userType']).catch(() => {});
       
-      let response;
-      if (type === 'driver') {
-        // Ensure identifier is always sent as string (avoid 422 from pydantic if numeric)
-        await remoteLog('CALLING_DRIVER_LOGIN', { identifier: String(identifier) });
-        response = await backendAPI.driverLogin(String(identifier), password);
-        await remoteLog('DRIVER_LOGIN_SUCCESS', { userId: response.user?.id });
-      } else {
-        await remoteLog('CALLING_ADMIN_LOGIN', { identifier });
-        response = await backendAPI.adminLogin(identifier, password);
-        await remoteLog('ADMIN_LOGIN_SUCCESS', { userId: response.user?.id });
-      }
+      // Ensure identifier is always sent as string (avoid 422 from pydantic if numeric)
+      await remoteLog('CALLING_DRIVER_LOGIN', { identifier: String(identifier) });
+      const response = await backendAPI.driverLogin(String(identifier), password);
+      await remoteLog('DRIVER_LOGIN_SUCCESS', { userId: response.user?.id });
 
-      // Store in AsyncStorage with proper types
+      // Store in AsyncStorage
       await AsyncStorage.setItem('authToken', String(response.token));
       await AsyncStorage.setItem('user', JSON.stringify(response.user));
-      await AsyncStorage.setItem('userType', String(response.user_type));
+      await AsyncStorage.setItem('userType', 'driver');
 
       // Update state
       set({
-        user: response.user,
-        userType: response.user_type,
+        user: response.user as Driver,
         token: response.token,
         isAuthenticated: true,
       });
 
-      // 🔔 CRITICAL: Re-register FCM token with user_id after login
-      // This links the FCM token to the logged-in user so they can receive notifications
-      registerPushTokenAfterLogin(response.user.id, response.user_type).catch(err => {
+      // 🔔 Register FCM token with driver user_id after login
+      registerPushTokenAfterLogin(response.user.id, 'driver').catch(err => {
         console.warn('Failed to register push token:', err);
-        // Don't block login if push token registration fails
       });
     } catch (error: any) {
-      // Log the full error for remote debugging
-      await remoteLog('LOGIN_ERROR', {
+      await remoteLog('DRIVER_LOGIN_ERROR', {
         message: error.message,
         status: error.response?.status,
-        statusText: error.response?.statusText,
         responseData: error.response?.data,
-        requestUrl: error.config?.url,
-        requestBaseURL: error.config?.baseURL,
       });
-      console.error('Login failed:', error);
+      console.error('Driver login failed:', error);
       throw new Error(error.response?.data?.detail || error.response?.data?.message || 'Login failed');
     }
   },
 
   logout: async () => {
     try {
-      // Clear AsyncStorage
       await AsyncStorage.multiRemove(['authToken', 'user', 'userType']);
-
-      // Clear state
       set({
         user: null,
-        userType: null,
         token: null,
         isAuthenticated: false,
       });
@@ -123,11 +103,11 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   changePassword: async (newPassword: string) => {
-    const { user, userType } = get();
-    if (!user || !userType) throw new Error('No user logged in');
+    const { user } = get();
+    if (!user) throw new Error('No user logged in');
 
     try {
-      await backendAPI.changePassword(user.id, userType, newPassword);
+      await backendAPI.changePassword(user.id, 'driver', newPassword);
 
       // Update user object (no longer first login)
       const updatedUser = { ...user, is_first_login: false };
@@ -147,8 +127,8 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         'userType',
       ]);
 
-      if (token[1] && userStr[1] && userType[1]) {
-        // Parse user and ensure all fields are properly typed
+      // Only allow driver users in this app
+      if (token[1] && userStr[1] && userType[1] === 'driver') {
         const parsedUser = JSON.parse(userStr[1]);
         
         // Fix any boolean fields that might be stored as strings
@@ -159,16 +139,16 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         set({
           token: token[1],
           user: parsedUser,
-          userType: userType[1] as UserType,
           isAuthenticated: true,
           isLoading: false,
         });
       } else {
+        // Clear any non-driver data
+        await AsyncStorage.multiRemove(['authToken', 'user', 'userType']).catch(() => {});
         set({ isLoading: false });
       }
     } catch (error) {
       console.error('Failed to load stored auth:', error);
-      // Clear corrupted storage and reset
       await AsyncStorage.multiRemove(['authToken', 'user', 'userType']).catch(() => {});
       set({ isLoading: false });
     }
