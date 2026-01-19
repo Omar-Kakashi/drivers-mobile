@@ -1,10 +1,11 @@
 /**
  * Driver Dashboard Screen - Overview for drivers
  * Enhanced with skeleton loading, cached stores, and haptic feedback
+ * Features: Auto-logout on cancelled status, current month rent display
  */
 
-import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, ScrollView, StyleSheet, TouchableOpacity, RefreshControl } from 'react-native';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
+import { View, Text, ScrollView, StyleSheet, TouchableOpacity, RefreshControl, Alert } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { theme } from '../../theme';
@@ -31,9 +32,10 @@ const formatAmount = (amount: any): string => {
 };
 
 export default function DriverDashboardScreen() {
-  const { user } = useAuthStore();
+  const { user, checkStatus } = useAuthStore();
   const driver = user as Driver;
   const navigation = useNavigation<any>();
+  const statusCheckInterval = useRef<NodeJS.Timeout | null>(null);
 
   // Use cached stores
   const { 
@@ -60,6 +62,24 @@ export default function DriverDashboardScreen() {
   // Initial load
   useEffect(() => {
     loadDashboardData();
+    
+    // Start periodic status check for auto-logout (every 60 seconds)
+    statusCheckInterval.current = setInterval(async () => {
+      const shouldLogout = await checkStatus();
+      if (shouldLogout) {
+        Alert.alert(
+          'Session Ended',
+          'Your account has been deactivated. Please contact admin.',
+          [{ text: 'OK' }]
+        );
+      }
+    }, 60000);
+    
+    return () => {
+      if (statusCheckInterval.current) {
+        clearInterval(statusCheckInterval.current);
+      }
+    };
   }, []);
 
   const loadDashboardData = async () => {
@@ -205,8 +225,8 @@ export default function DriverDashboardScreen() {
 
               <View style={styles.balanceGrid}>
                 <View style={styles.balanceItem}>
-                  <Text style={styles.balanceSubLabel}>Total Rent Due</Text>
-                  <Text style={styles.balanceSubValue}>AED {formatAmount(balance.total_rent_due)}</Text>
+                  <Text style={styles.balanceSubLabel}>This Month's Rent</Text>
+                  <Text style={styles.balanceSubValue}>AED {formatAmount(balance.current_month_rent || balance.total_rent_due)}</Text>
                 </View>
                 <View style={[styles.balanceItem, styles.balanceBorderLeft]}>
                   <Text style={styles.balanceSubLabel}>Total Paid</Text>

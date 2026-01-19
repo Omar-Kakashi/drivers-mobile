@@ -1,10 +1,13 @@
 /**
  * Authentication Store - Driver Mobile App
  * Manages driver user authentication state and tokens
+ * Features: Device binding, auto-logout on cancelled status
  */
 
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Application from 'expo-application';
+import * as Device from 'expo-device';
 import { backendAPI, getCurrentBackendUrl } from '../api';
 import { Driver } from '../types';
 import { registerPushTokenAfterLogin } from '../utils/pushNotificationHelper';
@@ -31,6 +34,41 @@ const remoteLog = async (message: string, data?: any) => {
   }
 };
 
+/**
+ * Get unique device identifier for one-device-per-driver feature
+ */
+const getDeviceId = async (): Promise<string> => {
+  try {
+    // Use Android ID on Android, or generate a persistent ID on iOS
+    let deviceId: string | null = null;
+    
+    if (Device.osName === 'Android') {
+      deviceId = Application.getAndroidId();
+    } else if (Device.osName === 'iOS') {
+      // On iOS, use a combination of device info (persisted in AsyncStorage)
+      deviceId = await AsyncStorage.getItem('device_unique_id');
+      if (!deviceId) {
+        deviceId = `ios_${Device.modelId}_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+        await AsyncStorage.setItem('device_unique_id', deviceId);
+      }
+    }
+    
+    // Fallback: use a persisted random ID
+    if (!deviceId) {
+      deviceId = await AsyncStorage.getItem('device_unique_id');
+      if (!deviceId) {
+        deviceId = `device_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+        await AsyncStorage.setItem('device_unique_id', deviceId);
+      }
+    }
+    
+    return deviceId;
+  } catch (error) {
+    console.warn('Failed to get device ID:', error);
+    return `fallback_${Date.now()}`;
+  }
+};
+
 interface AuthState {
   user: Driver | null;
   token: string | null;
@@ -42,6 +80,7 @@ interface AuthState {
   logout: () => Promise<void>;
   changePassword: (newPassword: string) => Promise<void>;
   loadStoredAuth: () => Promise<void>;
+  checkStatus: () => Promise<boolean>;  // Returns true if should logout
 }
 
 export const useAuthStore = create<AuthState>((set, get) => ({
@@ -57,9 +96,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       // Clear any corrupted old data first
       await AsyncStorage.multiRemove(['authToken', 'user', 'userType']).catch(() => {});
       
+      // Get device ID for one-device-per-driver binding
+      const deviceId = await getDeviceId();
+      await remoteLog('CALLING_DRIVER_LOGIN', { identifier: String(identifier), deviceId });
+      
       // Ensure identifier is always sent as string (avoid 422 from pydantic if numeric)
-      await remoteLog('CALLING_DRIVER_LOGIN', { identifier: String(identifier) });
-      const response = await backendAPI.driverLogin(String(identifier), password);
+      const response = await backendAPI.driverLogin(String(identifier), password, deviceId);
       await remoteLog('DRIVER_LOGIN_SUCCESS', { userId: response.user?.id });
 
       // Store in AsyncStorage
@@ -90,7 +132,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   logout: async () => {
+    const { user } = get();
     try {
+      // Notify backend to clear device binding
+      if (user?.id) {
+        await backendAPI.driverLogout(user.id).catch(() => {});
+      }
+      
       await AsyncStorage.multiRemove(['authToken', 'user', 'userType']);
       set({
         user: null,
@@ -99,6 +147,25 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       });
     } catch (error) {
       console.error('Logout failed:', error);
+    }
+  },
+
+  // Check driver status - called periodically to auto-logout cancelled drivers
+  checkStatus: async () => {
+    const { user, logout } = get();
+    if (!user?.id) return false;
+    
+    try {
+      const { should_logout, status } = await backendAPI.checkDriverStatus(user.id);
+      if (should_logout || status === 'cancelled') {
+        console.log('🚨 Driver status is cancelled - forcing logout');
+        await logout();
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.warn('Failed to check driver status:', error);
+      return false;
     }
   },
 

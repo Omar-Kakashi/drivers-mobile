@@ -234,8 +234,9 @@ class BackendAPI {
   /**
    * Driver Login - Simple password (default "123456789", hashed after first change)
    * Returns is_first_login: true if password never changed
+   * Now includes device_id for one-device-per-driver enforcement
    */
-  async driverLogin(identifier: string, password: string): Promise<AuthResponse> {
+  async driverLogin(identifier: string, password: string, deviceId?: string): Promise<AuthResponse> {
     // Only run auto-detection in dev mode - production uses static URL set in constructor
     if (IS_DEV_MODE && !this.baseUrlInitialized) {
       await this.initializeBackendUrl();
@@ -246,11 +247,16 @@ class BackendAPI {
       baseURL: this.client.defaults.baseURL,
       url: '/auth/driver-login',
       IS_DEV_MODE,
-      detectedUrl
+      detectedUrl,
+      hasDeviceId: !!deviceId
     });
     try {
       // Ensure identifier is always sent as a string - Pydantic expects a string
-      const payload = { identifier: String(identifier), password };
+      const payload = { 
+        identifier: String(identifier), 
+        password,
+        device_id: deviceId || null  // Send device ID for binding
+      };
       const { data } = await this.client.post('/auth/driver-login', payload);
       console.log('✅ Driver Login Success');
       return data;
@@ -266,6 +272,27 @@ class BackendAPI {
       });
       throw error;
     }
+  }
+
+  /**
+   * Notify backend of driver logout (clears device binding)
+   */
+  async driverLogout(driverId: string): Promise<void> {
+    try {
+      await this.client.post(`/auth/driver-logout/${driverId}`);
+      console.log('✅ Backend notified of logout');
+    } catch (error: any) {
+      console.warn('⚠️ Failed to notify backend of logout:', error.message);
+      // Don't throw - local logout should still succeed
+    }
+  }
+
+  /**
+   * Check driver status - used for auto-logout when cancelled
+   */
+  async checkDriverStatus(driverId: string): Promise<{ status: string; should_logout: boolean }> {
+    const { data } = await this.client.get(`/auth/driver-status/${driverId}`);
+    return data;
   }
 
   /**
@@ -373,6 +400,17 @@ class BackendAPI {
       total_salik: data.total_salik || 0,
       total_fines: (data.total_traffic_fines || 0) + (data.total_internal_fines || 0),
     };
+  }
+
+  /**
+   * Get filtered balance for a specific period
+   * Used by Balance screen filter tabs
+   */
+  async getFilteredBalance(driverId: string, period: '15days' | 'month' | '30days' | 'all'): Promise<any> {
+    const { data } = await this.client.get(`/driver-balance/${driverId}/balance/filtered`, {
+      params: { period }
+    });
+    return data;
   }
 
   async getDriverTransactions(

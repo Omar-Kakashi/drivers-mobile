@@ -7,14 +7,24 @@ import { useAuthStore } from '../../stores/authStore';
 import { useBalanceStore } from '../../stores/balanceStore';
 import { BalanceSkeleton } from '../../components/SkeletonLoader';
 import { lightHaptic } from '../../utils/haptics';
+import { backendAPI } from '../../api';
+
+type FilterPeriod = '15days' | 'month' | '30days' | 'all';
+
+const FILTER_OPTIONS: { key: FilterPeriod; label: string }[] = [
+  { key: '15days', label: '15 Days' },
+  { key: 'month', label: 'This Month' },
+  { key: '30days', label: '30 Days' },
+  { key: 'all', label: 'All Time' },
+];
 
 export default function MyBalanceScreen() {
   const { user } = useAuthStore();
   const navigation = useNavigation<any>();
   
-  // Use cached store
+  // Use cached store for initial display
   const { 
-    balance, 
+    balance: cachedBalance, 
     isLoading, 
     isRefreshing,
     fetchBalance 
@@ -22,6 +32,12 @@ export default function MyBalanceScreen() {
   
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [selectedPeriod, setSelectedPeriod] = useState<FilterPeriod>('all');
+  const [filteredBalance, setFilteredBalance] = useState<any>(null);
+  const [filterLoading, setFilterLoading] = useState(false);
+
+  // Use filtered balance if available, otherwise cached
+  const balance = filteredBalance || cachedBalance;
 
   const formatAmount = (amount: any): string => {
     if (amount === null || amount === undefined) return '0.00';
@@ -35,12 +51,40 @@ export default function MyBalanceScreen() {
     }
   }, [user]);
 
+  // Fetch filtered balance when period changes
+  useEffect(() => {
+    if (user?.id && selectedPeriod) {
+      loadFilteredBalance();
+    }
+  }, [selectedPeriod, user?.id]);
+
+  const loadFilteredBalance = async () => {
+    if (!user?.id) return;
+    
+    setFilterLoading(true);
+    try {
+      const data = await backendAPI.getFilteredBalance(user.id, selectedPeriod);
+      setFilteredBalance(data);
+    } catch (error) {
+      console.error('Failed to load filtered balance:', error);
+      // Fall back to cached balance
+      setFilteredBalance(null);
+    } finally {
+      setFilterLoading(false);
+    }
+  };
+
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     lightHaptic();
-    await fetchBalance(user?.id || '', true);
+    await loadFilteredBalance();
     setRefreshing(false);
-  }, [user?.id]);
+  }, [user?.id, selectedPeriod]);
+
+  const handlePeriodChange = (period: FilterPeriod) => {
+    lightHaptic();
+    setSelectedPeriod(period);
+  };
 
   if (isInitialLoad && isLoading) {
     return <BalanceSkeleton />;
@@ -51,11 +95,49 @@ export default function MyBalanceScreen() {
       style={styles.container}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
     >
+      {/* Filter Tabs */}
+      <View style={styles.filterContainer}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterScroll}>
+          {FILTER_OPTIONS.map((option) => (
+            <TouchableOpacity
+              key={option.key}
+              style={[
+                styles.filterTab,
+                selectedPeriod === option.key && styles.filterTabActive
+              ]}
+              onPress={() => handlePeriodChange(option.key)}
+            >
+              <Text style={[
+                styles.filterTabText,
+                selectedPeriod === option.key && styles.filterTabTextActive
+              ]}>
+                {option.label}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      </View>
+
+      {/* Period Info Banner */}
+      {selectedPeriod !== 'all' && filteredBalance?.start_date && (
+        <View style={styles.periodBanner}>
+          <Ionicons name="calendar-outline" size={16} color={theme.colors.driver.primary} />
+          <Text style={styles.periodBannerText}>
+            {new Date(filteredBalance.start_date).toLocaleDateString()} - {new Date(filteredBalance.end_date).toLocaleDateString()}
+          </Text>
+        </View>
+      )}
+
       <View style={styles.balanceCard}>
-        <Text style={styles.balanceLabel}>Current Balance</Text>
+        <Text style={styles.balanceLabel}>
+          {selectedPeriod === 'all' ? 'Current Balance' : 'Period Balance'}
+        </Text>
         <Text style={[styles.balanceAmount, { color: parseFloat(balance?.current_balance || '0') >= 0 ? theme.colors.success : theme.colors.error }]}>
           AED {formatAmount(balance?.current_balance)}
         </Text>
+        {filterLoading && (
+          <Text style={styles.loadingText}>Updating...</Text>
+        )}
       </View>
 
       <View style={styles.card}>
@@ -173,6 +255,51 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: theme.colors.background,
   },
+  filterContainer: {
+    backgroundColor: theme.colors.surface,
+    paddingVertical: theme.spacing.sm,
+    borderBottomWidth: 1,
+    borderBottomColor: theme.colors.border,
+  },
+  filterScroll: {
+    paddingHorizontal: theme.spacing.md,
+    gap: theme.spacing.sm,
+    flexDirection: 'row',
+  },
+  filterTab: {
+    paddingHorizontal: theme.spacing.lg,
+    paddingVertical: theme.spacing.sm,
+    borderRadius: 20,
+    backgroundColor: theme.colors.background,
+    borderWidth: 1,
+    borderColor: theme.colors.border,
+  },
+  filterTabActive: {
+    backgroundColor: theme.colors.driver.primary,
+    borderColor: theme.colors.driver.primary,
+  },
+  filterTabText: {
+    ...theme.typography.body2,
+    color: theme.colors.text.secondary,
+    fontWeight: '500',
+  },
+  filterTabTextActive: {
+    color: theme.colors.text.white,
+    fontWeight: '600',
+  },
+  periodBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: theme.colors.driver.light,
+    paddingVertical: theme.spacing.sm,
+    gap: theme.spacing.xs,
+  },
+  periodBannerText: {
+    ...theme.typography.caption,
+    color: theme.colors.driver.primary,
+    fontWeight: '500',
+  },
   balanceCard: {
     backgroundColor: theme.colors.driver.primary,
     margin: theme.spacing.md,
@@ -191,6 +318,12 @@ const styles = StyleSheet.create({
     ...theme.typography.h1,
     color: theme.colors.text.white,
     fontWeight: 'bold',
+  },
+  loadingText: {
+    ...theme.typography.caption,
+    color: theme.colors.text.white,
+    opacity: 0.7,
+    marginTop: theme.spacing.xs,
   },
   card: {
     backgroundColor: theme.colors.text.white,
